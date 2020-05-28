@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="styles/styles.css">
+	<script type="text/javascript" src='scripts/script.js'></script>
+	<title>photo editor</title>
+</head>
+<body id='body'>
+	<div>
+		<div class="container flex-row">
+			<div class="flex-column" style="flex: 1; align-self: stretch">
+				<div style="flex: 1; align-self: stretch" class="flex-column">
+					<input type='file' accept="images" id='image_input' />
+					<div id='photo_container' class='photo-container'>
+						<canvas id='canvas'></canvas>
+											
+					</div>
+				</div>	
+
+				<div class="bottom-options">
+					
+				</div>
+			</div>
+
+			<div class="right-side-options flex-column" style="justify-content: flex-start;">
+				<div class="flex-column">
+					<div>
+						Brightness
+					</div>
+					<div>
+						<input type='number' name='brightness' id='brightness_input' value="0" />
+					</div>
+				</div>
+				<div class="flex-column">
+					<div>
+						Contrast
+					</div>
+					<div>
+						<input type='number' name='contrast' id='contrast_input' value="0" />
+					</div>
+				</div>
+			</div>	
+		</div>
+	</div>
+</body>
+</html>

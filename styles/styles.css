@@ -1,0 +1,37 @@
+.flex-column {
+	display: flex; 
+	flex-direction: column; 
+	justify-content: center; 
+	align-items: center
+}
+
+.flex-row {
+	display: flex; 
+	flex-direction: row; 
+	justify-content: center; 
+	align-items: center
+}
+
+.right-side-options {
+	border: 1px solid black;
+	width: 30vw;
+	align-self: stretch;
+}
+
+.photo-container {
+	height: 70vh;
+	align-self: stretch;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.bottom-options {
+	border: 1px solid black;
+	flex: 1;
+	align-self: stretch;
+}
+
+.container {
+	height: 97vh;
+}
