@@ -2,16 +2,19 @@ class Main {
 	fileReader = null;
 	imageFile = null;
 	image = null;
+	editedImage = null; // used by rotation (so it don't have to iterate over every pixel)
 	ctx = null;
 	aspectRatio = null;
 	screenAspectRatio = null;
 	originalImageData = null;
-	changes = {}
+	changes = {};
 	imageLoaded = false;
+	prevChangeName = null;
 
 	constructor() { 
 		this.fileReader = new FileReader();
 		this.image = new Image();
+		this.editedImage = new Image();
 
 		// eventListeners
         this.fileReader.onload = this.handleFileReader
@@ -21,6 +24,8 @@ class Main {
 			brightness_input.onchange = this.onChange;
 			contrast_input.onchange = this.onChange;
 			saturation_input.onchange = this.onChange;
+			bottom_option_input.onchange = this.onChange;
+			rotate_button.onclick = () => {this.bottomOption('rotate')}
 			image_input.addEventListener('change', (e) => {
 				// console.log(e, e.target.result);
 				this.imageFile = e.target.files[0];
@@ -29,20 +34,55 @@ class Main {
 		})
 	}
 
-	onChange = (e) => {
-		this.changes[e.target.name] = e.target.value;
-		console.log(this.changes);
-		if(this.imageLoaded)
-			this.applyChangesToCanvas();
+	bottomOption(button) {
+		bottom_option_input.style.display = 'block';
+		bottom_option_input.name = "rotate";
 	}
 
+	onChange = (e) => {
+		if(e.target.name === '') {
+			return;
+		}
+		this.changes[e.target.name] = e.target.value;
+		if(this.imageLoaded)
+			if(e.target.name === 'rotate') {
+				// only once for rotate
+				if(this.prevChangeName !== 'rotate') {
+					this.editedImage.src = canvas.toDataURL('image/png');
+				}
+				this.prevChangeName = 'rotate';
+				this.rotateImage();
+			}
+			else {
+				this.prevChangeName = 'adjustment';
+				this.applyChangesToCanvas();
+			}
+	}
 
-	applyChangesToCanvas = (change) => {
+	rotateImage() {
+		let rotateValue = parseInt(this.changes.rotate) || 0;
+		this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+		this.ctx.save();
+		this.ctx.translate(canvas.width/2, canvas.height/2);
+		this.ctx.rotate((Math.PI / 180) * rotateValue);
+		this.ctx.drawImage(this.editedImage, -canvas.width/2, -canvas.height/2, canvas.width, canvas.height);
+		this.ctx.restore();
+
+
+		// changing the imageData because putImageData used in applyChangesToCanvas(for adjustment) doesnot depends on rotaion of ctx (its an array for whole canvas, we need rotated arry for it to show rotated image), now we are changing the orginalImageData (array) to rotated image array 
+		let imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
+		this.originalImageData = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width);
+		// to apply rest of the updates like brightness, contrast, saturation
+		// this.applyChangesToCanvas();
+	}
+
+	applyChangesToCanvas = () => {
 		let imageData = new ImageData(new Uint8ClampedArray(this.originalImageData.data), this.originalImageData.width);
 		let data = imageData.data;
 		let brightnessValue = parseInt(this.changes.brightness) || 0;
 		let contrastValue = parseInt(this.changes.contrast) || 0;
 		let saturationValue = parseInt(this.changes.saturation) || 0;
+		this.ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 		for(let i=0; i<data.length; i+=4) {
 			// brightness
@@ -54,16 +94,21 @@ class Main {
 			let avg = (data[i]+data[i+1]+data[i+2])/3;
 			if(avg > 122.5) {
 				// bright pixel
-				// * data[i]/avg canbe anything like data[i]/100 or data[i]/255 just need to be dependent on current rgb value (to make change in rgb value dependent on current rgb value) (else for two bright pixels it will increase brightness equally so it will not increase contrast in between two bright pixels)
-				data[i] += (contrastValue*(data[i]/avg));
-				data[i+1] += (contrastValue*(data[i+1]/avg));
-				data[i+2] += (contrastValue*(data[i+2]/avg));
+				// equaly increase else color will change
+				// bright to more bright, further for two bright pixels increase in brightness of less bright pixel should be less than that of more bright pixel, so it can create contrast even in between two bright pixels
+				// to do so the value increased or decreased should depends on brightness of pixel
+				let value = contrastValue*((avg-122.5)/100)
+				data[i] += value;
+				data[i+1] += value;
+				data[i+2] += value;
 			}
 			else {
 				// dark pixel
-				data[i] -= (contrastValue*(data[i]/avg));
-				data[i+1] -= (contrastValue*(data[i+1]/avg));
-				data[i+2] -= (contrastValue*(data[i+2]/avg));
+				// dark to more dark, less the avg value =  more dark 
+				let value = contrastValue*((122.5-avg)/100);
+				data[i] -= value;
+				data[i+1] -= value;
+				data[i+2] -= value;
 			}
 
 			// saturation (increase the value of color which is more lol)
@@ -72,11 +117,12 @@ class Main {
 		 	// if saturation is increasing the gap betweem r, g, b values and avg should be increasing
 		 	// using saturation as percentage of diff increased or decreased as compared to original difference 
 			avg = (data[i]+data[i+1]+data[i+2])/3;
-			data[i] += (((data[i]-avg)/100)*saturationValue)
-			data[i+1] += (((data[i+1]-avg)/100)*saturationValue)
-			data[i+2] += (((data[i+2]-avg)/100)*saturationValue)
+			data[i] += (((data[i]-avg)/100)*saturationValue);
+			data[i+1] += (((data[i+1]-avg)/100)*saturationValue);
+			data[i+2] += (((data[i+2]-avg)/100)*saturationValue);
 
 		}
+
 		this.ctx.putImageData(imageData, 0, 0);
 	}
 
