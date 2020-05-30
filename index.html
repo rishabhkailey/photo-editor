@@ -12,19 +12,25 @@
 				<div style="flex: 1; align-self: stretch" class="flex-column">
 					<input type='file' accept="images" id='image_input' />
 					<div id='photo_container' class='photo-container'>
-						<canvas id='canvas'></canvas>
-											
+						<div id="canvas_container" style="position: relative;">
+							<canvas id='canvas'></canvas>
+						</div>				
 					</div>
 				</div>	
 
 				<div class="bottom-options">
 					<div class="flex-column">
 						<div>
+							<!-- controls for any bottom option, when on click on any option show any controls needed and change name = 'option' -->
 							<input type="number" value="0" style="display: none;" id="bottom_option_input" />
+							<button id="bottom_confirm_button" style="display: none;">confirm</button>
 						</div>
 						<div class="flex-row">
 							<button id="rotate_button">
 								rotate
+							</button>
+							<button id="crop_button">
+								crop
 							</button>
 						</div>
 					</div>

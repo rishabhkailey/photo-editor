@@ -18,13 +18,20 @@ class Main {
 
 		// eventListeners
         this.fileReader.onload = this.handleFileReader
-		this.image.onload = this.reRenderCanvas;
+		// first time
+		this.image.onload = () => {
+			this.editedImage.src = this.image.src;
+		};
+		// after editing
+		this.editedImage.onload = this.reRenderCanvas;
+
 		window.addEventListener('resize', this.reRenderCanvas);
 		window.addEventListener('load', (e) => {
 			brightness_input.onchange = this.onChange;
 			contrast_input.onchange = this.onChange;
 			saturation_input.onchange = this.onChange;
 			bottom_option_input.onchange = this.onChange;
+			crop_button.onclick = this.onCropClick;
 			rotate_button.onclick = () => {this.bottomOption('rotate')}
 			image_input.addEventListener('change', (e) => {
 				// console.log(e, e.target.result);
@@ -34,9 +41,102 @@ class Main {
 		})
 	}
 
+	// crop
+	showCropRect= ()=> {
+		if(this.cropRect) {
+			return;
+		}
+ 		this.cropRect = document.createElement('div');
+		this.cropRect.style.width = canvas.width/2+'px';
+		this.cropRect.style.height = canvas.height/2+'px';
+		this.cropRect.style.position = 'absolute';
+		this.cropRect.style.left = canvas.width/4 + 'px';
+		this.cropRect.style.top = canvas.height/4 + 'px';
+		this.cropRect.style.border = '1px solid white';
+		canvas_container.appendChild(this.cropRect);
+
+		this.canvasContainerBoundingRect = canvas_container.getBoundingClientRect();
+		this.showConfirmButton('crop');
+
+	}
+	hideCropRect = () => {
+		canvas_container.removeChild(this.cropRect);
+		this.cropRect = null;
+	}
+	changeCropRectPosition = (e) => {
+		// e.offsetX is effected by its children so use clientX 
+
+		// mouse position relative to canvas 
+		let mouse = {x: e.clientX - this.canvasContainerBoundingRect.left, y: e.clientY - this.canvasContainerBoundingRect.top};
+		// distance from center(original position of cropRect)
+		let x =  mouse.x - canvas.width/2;
+		let y = mouse.y - canvas.height/2;
+
+		if((x<(-1*canvas.width/4) || x>(canvas.width/4)) && (y<(-1*canvas.height/4) || y>(canvas.height/4)))
+			return
+
+		if(x<(-1*canvas.width/4)) {
+			x = -1*canvas.width/4;
+		}
+		else if(x>(canvas.width)/4) {
+			x = canvas.width/4;
+		}
+
+		if(y<(-1*canvas.height/4)) {
+			y = -1*canvas.height/4;
+		}
+		else if(y>(canvas.height)/4) {
+			y = canvas.width/4;
+		}
+		this.cropRect.style.transform = `translate(${x}px, ${y}px)`;
+	}
+
+	stopTrackingMouse = () => {
+		canvas_container.removeEventListener('mousemove', this.changeCropRectPosition);
+	}
+	startTrackingMouse = ()=> {
+	    canvas_container.addEventListener('mousemove', this.changeCropRectPosition);
+	}
+	onCropClick = () => {
+		console.log(this.showCropRect);
+		this.showCropRect();
+
+		this.cropRect.addEventListener('mousedown', this.startTrackingMouse);
+		this.cropRect.addEventListener('mouseup', this.stopTrackingMouse);
+	}
+
+	confirmCrop = () => {
+		let {left, top, width, height} = this.cropRect.getBoundingClientRect();
+		let imageData = this.ctx.getImageData(left, top, width, height);
+		console.log(left, top, width, height, imageData);
+		this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+		// let scaleX = canvas.width/width;
+		// let scaleY = canvas.height/height;
+		// console.log(scaleX, scaleY);
+		// this.ctx.scale(scaleX, scaleY);
+
+		this.editedImage.src = getImageFromImageData(imageData, width, height);
+		console.log(this.editedImage);
+
+		// this.ctx.putImageData(imageData, 0, 0);
+		this.hideCropRect();
+		this.resetConfirmButton();
+	}
+
 	bottomOption(button) {
 		bottom_option_input.style.display = 'block';
 		bottom_option_input.name = "rotate";
+	}
+
+	showConfirmButton(name) {
+		bottom_confirm_button.style.display = 'block';
+		bottom_confirm_button.name = name;
+		bottom_confirm_button.onclick = this.confirmCrop;
+	}
+
+	resetConfirmButton() {
+		bottom_confirm_button.style.display = 'none';
+		bottom_confirm_button.name = null;
 	}
 
 	onChange = (e) => {
@@ -126,18 +226,21 @@ class Main {
 		this.ctx.putImageData(imageData, 0, 0);
 	}
 
-	changeCanvasDimensions = () => {
+	changeCanvasDimensions = (imageHeight, imageWidth) => {
 		let {height: availableHeight, width: availableWidth} = photo_container.getBoundingClientRect();
+		imageHeight = imageHeight || this.editedImage.height;
+		imageWidth = imageWidth || this.editedImage.width;
 
-		let ratio = availableWidth/this.image.width;
-		if((this.image.height*ratio) > availableHeight) {
-			ratio = availableHeight/this.image.height;
+		let ratio = availableWidth/imageWidth;
+		if((imageHeight*ratio) > availableHeight) {
+			ratio = availableHeight/imageHeight;
 		}
 
-		canvas.width = ratio*this.image.width;
-		canvas.height = ratio*this.image.height;
+		canvas.width = ratio*imageWidth;
+		canvas.height = ratio*imageHeight;
+		canvas_container.style.width = ratio*imageWidth+'px';
+		canvas_container.style.height = ratio*imageHeight+'px';
 
-		console.log(canvas.width/canvas.height);
 	}
 
 	reRenderCanvas = (e) => {
@@ -149,7 +252,7 @@ class Main {
 			return;
 		
 		this.ctx = canvas.getContext('2d');
-		this.ctx.drawImage(this.image, 0, 0, canvas.width, canvas.height);
+		this.ctx.drawImage(this.editedImage, 0, 0, canvas.width, canvas.height);
 		let imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
 		this.originalImageData = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width);
 	}
@@ -160,5 +263,14 @@ class Main {
 
 }
 
+
 let obj = new Main();
 
+const getImageFromImageData = (imageData, height, width) => {
+	let canvas = document.createElement('canvas');
+	let ctx = canvas.getContext('2d');
+	canvas.width = width;
+	canvas.height = height;
+	ctx.putImageData(imageData, 0, 0);
+	return canvas.toDataURL('image/png');
+}
