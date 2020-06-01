@@ -10,6 +10,10 @@ class Main {
 	changes = {};
 	imageLoaded = false;
 	prevChangeName = null;
+	cropRect = null;
+	cropRectBoundingRect = null;
+	cropRectTranslate = null;
+	cropRectChangeType = null;
 
 	constructor() { 
 		this.fileReader = new FileReader();
@@ -46,7 +50,8 @@ class Main {
 		if(this.cropRect) {
 			return;
 		}
- 		this.cropRect = document.createElement('div');
+		this.cropRect = document.createElement('div');
+		this.cropRectTranslate = {x: 0, y: 0, scaleX: 1, scaleY: 1}; 
 		this.cropRect.style.width = canvas.width/2+'px';
 		this.cropRect.style.height = canvas.height/2+'px';
 		this.cropRect.style.position = 'absolute';
@@ -56,59 +61,158 @@ class Main {
 		canvas_container.appendChild(this.cropRect);
 
 		this.canvasContainerBoundingRect = canvas_container.getBoundingClientRect();
+		this.cropRectBoundingRect = this.cropRect.getBoundingClientRect();
 		this.showConfirmButton('crop');
 
 	}
 	hideCropRect = () => {
 		canvas_container.removeChild(this.cropRect);
 		this.cropRect = null;
+		this.cropRect.translate = null;
+		this.height = null;
+		this.width = null;
+		this.prevMousePosition = null;
 	}
 	changeCropRectPosition = (e) => {
-		// e.offsetX is effected by its children so use clientX 
+		let mouse = {x: e.clientX, y: e.clientY};
+		
+		// left, right, top, b of changing element are not correct they're value is not constant use (canvasLeft + (canvas.width/2), (canvasLeft + (canvas.height/2) for center
+		let {width, height} = this.cropRectBoundingRect;
+		let {left: canvasLeft, top: canvasTop, right: canvasRight, bottom: canvasBottom, height: canvasHeight, width: canvasWidth} = this.canvasContainerBoundingRect;
+		
+		
+		// calculating translate values needed (we want cropRect's center on mouse cursor, so calculating translate value needed from center)
+		let x = mouse.x - (canvasLeft + (canvas.width/2));
+		let y = mouse.y - (canvasTop + (canvas.height/2));
 
-		// mouse position relative to canvas 
-		let mouse = {x: e.clientX - this.canvasContainerBoundingRect.left, y: e.clientY - this.canvasContainerBoundingRect.top};
-		// distance from center(original position of cropRect)
-		let x =  mouse.x - canvas.width/2;
-		let y = mouse.y - canvas.height/2;
+		// new left and top of crop rect
+		let left = (canvasLeft + (canvas.width/2)) + x - width/2;
+		let top = (canvasTop + (canvas.height/2)) + y - height/2;
+		let right = canvasRight + (canvasWidth - (left - canvasLeft) - width);
+		let bottom = canvasBottom + (canvasHeight - (top - canvasTop) - height);
 
-		if((x<(-1*canvas.width/4) || x>(canvas.width/4)) && (y<(-1*canvas.height/4) || y>(canvas.height/4)))
-			return
+		console.log(width, left);
 
-		if(x<(-1*canvas.width/4)) {
-			x = -1*canvas.width/4;
-		}
-		else if(x>(canvas.width)/4) {
-			x = canvas.width/4;
+		if(left < canvasLeft || right < canvasRight) {
+			// reset the value to prev
+			x = this.cropRectTranslate.x;
 		}
 
-		if(y<(-1*canvas.height/4)) {
-			y = -1*canvas.height/4;
+		if(top < canvasTop || bottom < canvasBottom) {
+			y = this.cropRectTranslate.y;
 		}
-		else if(y>(canvas.height)/4) {
-			y = canvas.width/4;
+
+		this.cropRectTranslate.x = x;
+		this.cropRectTranslate.y = y;
+		
+		this.cropRect.style.transform = `translate(${x}px, ${y}px) scaleX(${this.cropRectTranslate.scaleX}) scaleY(${this.cropRectTranslate.scaleY})`;
+	}
+
+	prevMousePosition = null;
+	width = null;
+	height = null;
+	changeCropRectDimensions(e) {
+		if(!this.prevMousePosition) {
+			this.prevMousePosition = {x: e.clientX, y: e.clientY};
 		}
-		this.cropRect.style.transform = `translate(${x}px, ${y}px)`;
+		let mouse = {x: e.clientX, y: e.clientY};
+		let {width, height} = this.cropRectBoundingRect;
+		let {left: canvasLeft, top: canvasTop, right: canvasRight, bottom: canvasBottom, height: canvasHeight, width: canvasWidth} = this.canvasContainerBoundingRect;
+		
+		if(!this.width) {
+			this.width = width;
+		}
+		if(!this.height) {
+			this.height = height;
+		}
+
+		let {x, y} = this.cropRectTranslate;
+		
+		let cropRectLeft = (canvasLeft + (canvas.width/2)) + x - this.width/2;
+		let cropRectTop = (canvasTop + (canvas.height/2)) + y - this.height/2;
+		// right and bottom are just name but their distance is from top and left edge
+		let cropRectRight = cropRectLeft + this.width;
+		let cropRectBottom = cropRectTop + this.height;
+
+		if(this.cropRectChangeType.indexOf('l') !== -1) {
+			this.width -= (mouse.x - cropRectLeft);
+			this.cropRectTranslate.x += (mouse.x - cropRectLeft);
+			this.cropRect.style.width = `${this.width}px`;
+			this.cropRect.style.transform = `translate(${this.cropRectTranslate.x}px, ${this.cropRectTranslate.y}px) scaleX(${this.cropRectTranslate.scaleX})`;
+		}
+		else if(this.cropRectChangeType.indexOf('r') !== -1) {
+			this.width += (mouse.x - cropRectRight);
+			this.cropRect.style.width = `${this.width}px`;
+		}
+
+		if(this.cropRectChangeType.indexOf('t') !== -1) {	
+			this.height -= (mouse.y - cropRectTop);
+			this.cropRectTranslate.y += (mouse.y - cropRectTop);
+			this.cropRect.style.height = `${this.height}px`;
+			this.cropRect.style.transform = `translate(${this.cropRectTranslate.x}px, ${this.cropRectTranslate.y}px) scaleX(${this.cropRectTranslate.scaleX})`;
+		}
+		else if(this.cropRectChangeType.indexOf('b') !== -1) {
+			this.height += (mouse.y - cropRectBottom);
+			this.cropRect.style.height = `${this.height}px`;
+		}
+		this.prevMousePosition = {x: e.clientX, y: e.clientY};
+	}
+	changeCropRect = (e) => {
+		if(!this.cropRectChangeType) {
+			// calculate change type, runs only once (for mouseDown event), value of cropRectChangeType remains same as long as mouse is down, on mouse up its value is changed to null so for next mouse down it will recalculate it 
+			let {clientX: mouseX, clientY: mouseY} = e;
+			let {left: cropRectLeft, top: cropRectTop, bottom: cropRectBottom, right: cropRectRight} = this.cropRect.getBoundingClientRect();
+			
+			this.cropRectChangeType = '';
+			if(Math.abs(mouseX - cropRectLeft) < 10) {
+				this.cropRectChangeType += 'l';
+			}
+			else if(Math.abs(mouseX - cropRectRight) < 10) {
+				this.cropRectChangeType += 'r';
+			}
+
+			if(Math.abs(mouseY - cropRectTop) < 10) {
+				this.cropRectChangeType += 't';
+			}
+			else if(Math.abs(mouseY - cropRectBottom) < 10) {
+				this.cropRectChangeType += 'b';
+			}
+
+			if(this.cropRectChangeType === '') {
+				this.cropRectChangeType = 'c';
+			}
+		}
+		
+		if(this.cropRectChangeType === 'c')
+			this.changeCropRectPosition(e);
+		else 
+			this.changeCropRectDimensions(e);
 	}
 
 	stopTrackingMouse = () => {
-		canvas_container.removeEventListener('mousemove', this.changeCropRectPosition);
+		console.log('event removed');
+		this.cropRectChangeType = null;
+		canvas_container.removeEventListener('mousemove', this.changeCropRect);
 	}
 	startTrackingMouse = ()=> {
-	    canvas_container.addEventListener('mousemove', this.changeCropRectPosition);
+	    canvas_container.addEventListener('mousemove', this.changeCropRect);
 	}
 	onCropClick = () => {
 		console.log(this.showCropRect);
 		this.showCropRect();
 
+		// this.cropRect.addEventListener('mousedown', this.startTrackingMouse);
+		// this.cropRect.addEventListener('mouseup', this.stopTrackingMouse);
 		this.cropRect.addEventListener('mousedown', this.startTrackingMouse);
-		this.cropRect.addEventListener('mouseup', this.stopTrackingMouse);
+		window.addEventListener('mouseup', this.stopTrackingMouse);
+		
 	}
 
 	confirmCrop = () => {
 		let {left, top, width, height} = this.cropRect.getBoundingClientRect();
-		let imageData = this.ctx.getImageData(left, top, width, height);
-		console.log(left, top, width, height, imageData);
+		let canvasRect = canvas.getBoundingClientRect();
+		let imageData = this.ctx.getImageData(left-canvasRect.left, top-canvasRect.top, width, height);
+		console.log(left-canvasRect.left, top-canvasRect.top, width, height, imageData);
 		this.ctx.clearRect(0, 0, canvas.width, canvas.height);
 		// let scaleX = canvas.width/width;
 		// let scaleY = canvas.height/height;
@@ -266,7 +370,7 @@ class Main {
 
 let obj = new Main();
 
-const getImageFromImageData = (imageData, height, width) => {
+const getImageFromImageData = (imageData, width, height) => {
 	let canvas = document.createElement('canvas');
 	let ctx = canvas.getContext('2d');
 	canvas.width = width;
