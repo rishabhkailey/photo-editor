@@ -1,21 +1,16 @@
 "use strict"
 
 class Crop {
-	
 	constructor({setImageDataSrc}) {
 		this.setImageDataSrc = setImageDataSrc;
 		this.ctx = null;
-		this.cropRect = null;
-		this.canvasContainerBoundingRect = null;
-		this.cropRectBoundingRect = null;
-
-		// used to avoid checking for change type (changeType is same for one session(onMouseDown to onMouseUp))
-		this.cropRectChangeType = null;
-
-		this.cropRectTranslate = {x: 0, y: 0, scaleX: 1, scaleY: 1};
-		this.prevMousePosition = null;
-		this.width = null;
-		this.height = null;
+		this.cropRect = null;	
+		this.position = null;
+		this.nearEdge = '';
+		this.translate = {x: 0, y: 0};
+		this.offset = {x: 0, y: 0};
+		this.dimention = {width: 100, height: 100};
+		this.dimentionTranslate = {width: 0, height: 0};
 	}
 
 	
@@ -35,7 +30,6 @@ class Crop {
 			return;
 		}
 		this.cropRect = document.createElement('div');
-		this.cropRectTranslate = {x: 0, y: 0, scaleX: 1, scaleY: 1}; 
 		this.cropRect.style.width = canvas.width/2+'px';
 		this.cropRect.style.height = canvas.height/2+'px';
 		this.cropRect.style.position = 'absolute';
@@ -44,144 +38,113 @@ class Crop {
 		this.cropRect.style.border = '1px solid white';
 		canvas_container.appendChild(this.cropRect);
 
-		this.canvasContainerBoundingRect = canvas_container.getBoundingClientRect();
-		this.cropRectBoundingRect = this.cropRect.getBoundingClientRect();
+		this.dimention = {width: canvas.width/2, height: canvas.height/2};
+
 		this.showConfirmButton('crop');
 
 	}
 	hideCropRect = () => {
 		canvas_container.removeChild(this.cropRect);
 		this.cropRect = null;
-		this.cropRectTranslate = null;
-		this.height = null;
-		this.width = null;
-		this.prevMousePosition = null;
-	}
-	changeCropRectPosition = (e) => {
-		let mouse = {x: e.clientX, y: e.clientY};
-		
-		// left, right, top, b of changing element are not correct they're value is not constant use (canvasLeft + (canvas.width/2), (canvasLeft + (canvas.height/2) for center
-		let {width, height} = this.cropRectBoundingRect;
-		let {left: canvasLeft, top: canvasTop, right: canvasRight, bottom: canvasBottom, height: canvasHeight, width: canvasWidth} = this.canvasContainerBoundingRect;
-		
-		
-		// calculating translate values needed (we want cropRect's center on mouse cursor, so calculating translate value needed from center)
-		let x = mouse.x - (canvasLeft + (canvas.width/2));
-		let y = mouse.y - (canvasTop + (canvas.height/2));
-
-		// new left and top of crop rect
-		let left = (canvasLeft + (canvas.width/2)) + x - width/2;
-		let top = (canvasTop + (canvas.height/2)) + y - height/2;
-		let right = canvasRight + (canvasWidth - (left - canvasLeft) - width);
-		let bottom = canvasBottom + (canvasHeight - (top - canvasTop) - height);
-
-		console.log(width, left);
-
-		if(left < canvasLeft || right < canvasRight) {
-			// reset the value to prev
-			x = this.cropRectTranslate.x;
-		}
-
-		if(top < canvasTop || bottom < canvasBottom) {
-			y = this.cropRectTranslate.y;
-		}
-
-		this.cropRectTranslate.x = x;
-		this.cropRectTranslate.y = y;
-		
-		this.cropRect.style.transform = `translate(${x}px, ${y}px) scaleX(${this.cropRectTranslate.scaleX}) scaleY(${this.cropRectTranslate.scaleY})`;
-	}
-	changeCropRectDimensions(e) {
-		if(!this.prevMousePosition) {
-			this.prevMousePosition = {x: e.clientX, y: e.clientY};
-		}
-		let mouse = {x: e.clientX, y: e.clientY};
-		let {width, height} = this.cropRectBoundingRect;
-		let {left: canvasLeft, top: canvasTop, right: canvasRight, bottom: canvasBottom, height: canvasHeight, width: canvasWidth} = this.canvasContainerBoundingRect;
-		
-		if(!this.width) {
-			this.width = width;
-		}
-		if(!this.height) {
-			this.height = height;
-		}
-
-		let {x, y} = this.cropRectTranslate;
-		
-		let cropRectLeft = (canvasLeft + (canvas.width/2)) + x - this.width/2;
-		let cropRectTop = (canvasTop + (canvas.height/2)) + y - this.height/2;
-		// right and bottom are just name but their distance is from top and left edge
-		let cropRectRight = cropRectLeft + this.width;
-		let cropRectBottom = cropRectTop + this.height;
-
-		if(this.cropRectChangeType.indexOf('l') !== -1) {
-			this.width -= (mouse.x - cropRectLeft);
-			this.cropRectTranslate.x += (mouse.x - cropRectLeft);
-			this.cropRect.style.width = `${this.width}px`;
-			this.cropRect.style.transform = `translate(${this.cropRectTranslate.x}px, ${this.cropRectTranslate.y}px) scaleX(${this.cropRectTranslate.scaleX})`;
-		}
-		else if(this.cropRectChangeType.indexOf('r') !== -1) {
-			this.width += (mouse.x - cropRectRight);
-			this.cropRect.style.width = `${this.width}px`;
-		}
-
-		if(this.cropRectChangeType.indexOf('t') !== -1) {	
-			this.height -= (mouse.y - cropRectTop);
-			this.cropRectTranslate.y += (mouse.y - cropRectTop);
-			this.cropRect.style.height = `${this.height}px`;
-			this.cropRect.style.transform = `translate(${this.cropRectTranslate.x}px, ${this.cropRectTranslate.y}px) scaleX(${this.cropRectTranslate.scaleX})`;
-		}
-		else if(this.cropRectChangeType.indexOf('b') !== -1) {
-			this.height += (mouse.y - cropRectBottom);
-			this.cropRect.style.height = `${this.height}px`;
-		}
-		this.prevMousePosition = {x: e.clientX, y: e.clientY};
-	}
-	changeCropRect = (e) => {
-		if(!this.cropRectChangeType) {
-			// calculate change type, runs only once (for mouseDown event), value of cropRectChangeType remains same as long as mouse is down, on mouse up its value is changed to null so for next mouse down it will recalculate it 
-			let {clientX: mouseX, clientY: mouseY} = e;
-			let {left: cropRectLeft, top: cropRectTop, bottom: cropRectBottom, right: cropRectRight} = this.cropRect.getBoundingClientRect();
-			
-			this.cropRectChangeType = '';
-			if(Math.abs(mouseX - cropRectLeft) < 10) {
-				this.cropRectChangeType += 'l';
-			}
-			else if(Math.abs(mouseX - cropRectRight) < 10) {
-				this.cropRectChangeType += 'r';
-			}
-
-			if(Math.abs(mouseY - cropRectTop) < 10) {
-				this.cropRectChangeType += 't';
-			}
-			else if(Math.abs(mouseY - cropRectBottom) < 10) {
-				this.cropRectChangeType += 'b';
-			}
-
-			if(this.cropRectChangeType === '') {
-				this.cropRectChangeType = 'c';
-			}
-		}
-		
-		if(this.cropRectChangeType === 'c')
-			this.changeCropRectPosition(e);
-		else 
-			this.changeCropRectDimensions(e);
 	}
 
-	stopTrackingMouse = () => {
-		console.log('event removed');
-		this.cropRectChangeType = null;
-		canvas_container.removeEventListener('mousemove', this.changeCropRect);
+	isNearEdge = ({clientX: mouseX, clientY: mouseY})=> {
+
+		let {left: cropRectLeft, top: cropRectTop, bottom: cropRectBottom, right: cropRectRight} = this.cropRect.getBoundingClientRect();
+
+		this.nearEdge = '';
+		if(Math.abs(mouseX - cropRectLeft) < 10) {
+			this.nearEdge += 'l';
+		}
+		else if(Math.abs(mouseX - cropRectRight) < 10) {
+			this.nearEdge += 'r';
+		}
+
+		if(Math.abs(mouseY - cropRectTop) < 10) {
+			this.nearEdge += 't';
+		}
+		else if(Math.abs(mouseY - cropRectBottom) < 10) {
+			this.nearEdge += 'b';
+		}
+
+		if(this.nearEdge.length > 0) {
+			return true;
+		}
+
+		return false;
 	}
-	startTrackingMouse = ()=> {
-	    canvas_container.addEventListener('mousemove', this.changeCropRect);
+
+	changeDimention = (e)=> {
+		let newWidth = this.dimention.width;
+
+		if(this.nearEdge.indexOf('l') !== -1) {
+			this.translate.x = e.clientX - this.position.x + this.offset.x;
+			this.dimentionTranslate.width = e.clientX - this.position.x;
+		}
+		else if(this.nearEdge.indexOf('r') !== -1) {
+			this.dimentionTranslate.width = this.position.x - e.clientX;
+		}
+		
+		if(this.nearEdge.indexOf('t') !== -1) {
+			this.translate.y = e.clientY - this.position.y + this.offset.y;
+			this.dimentionTranslate.height = e.clientY - this.position.y;
+		}
+		else if(this.nearEdge.indexOf('b') !== -1) {
+			console.log('b', this.position.y - e.clienty);
+			this.dimentionTranslate.height = this.position.y - e.clientY;
+		}
+		
+		this.cropRect.style.width = `${this.dimention.width - this.dimentionTranslate.width}px`;
+		this.cropRect.style.height = `${this.dimention.height - this.dimentionTranslate.height}px`;
+		this.cropRect.style.transform = `translateX(${this.translate.x}px) translateY(${this.translate.y}px)`;
 	}
+
+	changePosition = (e)=> {
+		
+		let container = canvas_container.getBoundingClientRect();
+		let crop = this.cropRect.getBoundingClientRect();
+
+		// new tranlate - old (to get change for this function call)
+		let xChange = (this.offset.x + e.clientX - this.position.x) - this.translate.x;
+		let yChange = (this.offset.y + e.clientY - this.position.y) - this.translate.y;
+
+		// xChange < 0 means moving left && it will go beyond container then no
+		if(!((crop.left + xChange < container.left && xChange < 0) || (xChange > 0 && crop.right + xChange > container.right)))
+			this.translate.x = this.offset.x + e.clientX - this.position.x;
+		
+		if(!((crop.top + yChange < container.top && yChange < 0) || (yChange > 0 && crop.bottom + yChange > container.bottom))) 
+			this.translate.y = this.offset.y + e.clientY - this.position.y;
+
+		this.cropRect.style.transform = `translateX(${this.translate.x}px) translateY(${this.translate.y}px)`;
+	}
+	
 	onCropClick = () => {
-		console.log(this.showCropRect);
+		
 		this.showCropRect();
-		this.cropRect.addEventListener('mousedown', this.startTrackingMouse);
-		window.addEventListener('mouseup', this.stopTrackingMouse);
+
+		this.cropRect.onmousedown = (e)=>{
+			this.offset = {x: this.translate.x, y: this.translate.y};
+			this.dimention.width -= this.dimentionTranslate.width;
+			this.dimention.height -= this.dimentionTranslate.height;
+			this.dimentionTranslate = {width: 0, height: 0};
+
+			this.position = {x: e.clientX, y: e.clientY};
+
+			if(this.isNearEdge(e)) {
+				window.onmousemove = this.changeDimention;
+			}
+			else {
+				window.onmousemove = this.changePosition;
+			}
+
+		}
+		window.onmouseup = (e)=>{
+			window.onmousemove = null;
+		}
+		// console.log(this.showCropRect);
+		// this.showCropRect();
+		// this.cropRect.addEventListener('mousedown', this.startTrackingMouse);
+		// window.addEventListener('mouseup', this.stopTrackingMouse);
 	}
 
 	confirmCrop = () => {
@@ -271,15 +234,20 @@ class Rotate {
 		this.ctx.clearRect(0, 0, canvas.width, canvas.height);
 		this.ctx.save();
 		this.ctx.translate(canvas.width/2, canvas.height/2);
+		// rotate the canvas
 		this.ctx.rotate((Math.PI / 180) * rotateValue);
+		// draw image on canvas (image will be drawn on canvas as it is not rotated (its like tranform of the html element but that will not effect the drawing))
 		this.ctx.drawImage(this.getImage(), -canvas.width/2, -canvas.height/2, canvas.width, canvas.height);
-		this.ctx.restore();
-
+		
+		// code works perfect upto here (but the problem is if we try to adjust brightness, the adjustment class uses the original image(or edited image) to do so but that is not rotated so we need to update that as well, or adjusting the image will cancel the rotation)
 
 		// changing the imageData because putImageData used in applyChangesToCanvas(for adjustment) doesnot depends on rotaion of ctx (its an array for whole canvas, we need rotated arry for it to show rotated image), now we are changing the orginalImageData (array) to rotated image array 
 		let imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
 		// above we just rotate the canvas, now get the image data of rotated canvas and save the data
 		this.setImageData(new ImageData(new Uint8ClampedArray(imageData.data), imageData.width));
+
+		// restore's the translate we done to move to center
+		this.ctx.restore();
 	}
 }
 
