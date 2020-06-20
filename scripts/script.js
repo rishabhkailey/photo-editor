@@ -1,8 +1,143 @@
 "use strict"
 
+class SelectRect {
+	constructor({setImage, getImage, setImageData, getImageData}) {
+		this.setImage = setImage;
+		this.getImage = getImage;
+		this.setImageData = setImageData;
+		this.getImageData = getImageData;
+
+		this.position = null;
+		this.canvasOffset = null;
+
+		this.topLeft = null;
+		this.bottomRight = null;
+
+		this.currSelectionRect = null;
+	}
+
+	drawSelectionArea = (e)=> {
+		let {x: x1, y: y1} = this.position;
+		let {clientX: x2, clientY: y2} = e;
+
+		let topLeft = {};
+		let bottomRight = {};
+
+		if(x1 < x2) {
+
+			bottomRight.x = x2;
+			topLeft.x = x1;
+
+			if(y1 < y2) {
+				topLeft.y = y1;
+				bottomRight.y = y2;
+			}
+			else {
+				topLeft.y = y2;
+				bottomRight.y = y1;
+			}
+		}
+		else {
+			topLeft.x = x2;
+			bottomRight.x = x1;
+
+			if(y1 < y2) {
+				topLeft.y = y1;
+				bottomRight.y = y2;
+			}
+			else {
+				topLeft.y = y2;
+				bottomRight.y = y1;
+			}
+		}
+
+		this.topLeft = topLeft;
+		this.bottomRight = bottomRight;
+
+		this.markSelection(topLeft, bottomRight);
+
+	}
+
+	markSelection = ({x: x1, y: y1}, {x: x2, y: y2})=> {
+		
+		x1 = parseInt(x1 - this.canvasOffset.x);
+		x2 = parseInt(x2 - this.canvasOffset.x);
+		y1 = parseInt(y1 - this.canvasOffset.y);
+		y2 = parseInt(y2 - this.canvasOffset.y);
+
+		if(!this.currSelectionRect) {
+			this.currSelectionRect = this.createSelectionRect();
+		}
+
+		this.currSelectionRect.style.transform = `translate(${x1}px, ${y1}px)`;
+		this.currSelectionRect.style.width = `${x2 - x1}px`;
+		this.currSelectionRect.style.height = `${y2 - y1}px`;
+
+	}
+
+	createSelectionRect = ()=> {
+		let div = document.createElement('div');
+		div.style.position = 'absolute';
+		div.style.zIndex = '12';
+		div.style.border = '1px solid white';
+		div.style.top = '0px';
+		div.style.left = '0px';	
+
+		canvas_container.appendChild(div);
+		
+		return div;
+	}
+
+	finaliseSelction = ()=> {
+		let x1 = parseInt(this.topLeft.x - this.canvasOffset.x);
+		let y1 = parseInt(this.topLeft.y - this.canvasOffset.y);
+		let x2 = parseInt(this.bottomRight.x - this.canvasOffset.x);
+		let y2 = parseInt(this.bottomRight.y - this.canvasOffset.y);
+
+		console.log(x1, y1, x2, y2);
+		
+		let image = new ImageData(new Uint8ClampedArray(this.getImageData().data), this.getImageData().width);
+		let data = image.data;
+
+		console.log(data);
+		canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+
+		for(let i=0; i<image.height; i++) {
+			for(let j=0; j<image.width; j++) {
+				if(!(i>y1 && j>x1 && i<y2 && j<x2)) {
+					// data[(i*image.width + j)*4 + 0] = 255;
+					// data[(i*image.width + j)*4 + 1] = 255;
+					// data[(i*image.width + j)*4 + 2] = 255;
+					data[(i*image.width + j)*4 + 3] = 127;
+				}
+			}
+		}
+
+		console.log(data);
+		canvas.getContext('2d').putImageData(image, 0, 0);
+
+		this.setImageData(image);
+
+	}
+
+	init = ()=> {
+		this.canvasOffset = {x: canvas.getBoundingClientRect().left, y: canvas.getBoundingClientRect().top};
+		
+		canvas.onmousedown = (e)=> {
+			this.position = {x: e.clientX, y: e.clientY};
+			window.onmousemove = this.drawSelectionArea;
+		}
+		window.onmouseup = (e)=> {
+			window.onmousemove = null;
+			this.finaliseSelction();
+		}
+	}
+
+}
+
 class Crop {
-	constructor({setImageDataSrc}) {
-		this.setImageDataSrc = setImageDataSrc;
+	constructor({setImage}) {
+		this.setImage = setImage;
 		this.ctx = null;
 		this.cropRect = null;	
 		this.position = null;
@@ -75,7 +210,6 @@ class Crop {
 	}
 
 	changeDimention = (e)=> {
-		let newWidth = this.dimention.width;
 
 		if(this.nearEdge.indexOf('l') !== -1) {
 			this.translate.x = e.clientX - this.position.x + this.offset.x;
@@ -155,7 +289,7 @@ class Crop {
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-		this.setImageDataSrc(getImageFromImageData(imageData, width, height));
+		this.setImage(getImageFromImageData(imageData, width, height));
 		this.hideCropRect();
 		this.resetConfirmButton();
 	}
@@ -263,7 +397,8 @@ class Main {
 		this.image = new Image();
 		this.editedImage = new Image();
 		this.ctx = null;
-		this.cropObject = new Crop({setImageDataSrc: this.setImage});
+		this.selectRectObject = new SelectRect({setImage: this.setImage, getImage: this.getImage, getImageData: this.getImageData, setImageData: this.setImageData});
+		this.cropObject = new Crop({setImage: this.setImage});
 		this.imageAdjustmentObject = new ImageAdjustments({setImageData: this.setImageData, getImageData: this.getImageData});
 		this.rotateObject = new Rotate({setImageData: this.setImageData, getImageData: this.getImageData, getImage: this.getImage});
 		// eventListeners
@@ -282,6 +417,7 @@ class Main {
 			saturation_input.onchange = this.onChange;
 			bottom_option_input.onchange = this.onChange;
 			crop_button.onclick = this.cropObject.onCropClick;
+			select_rect.onclick = this.selectRectObject.init; 
 			rotate_button.onclick = () => {this.bottomOption('rotate')}
 			image_input.addEventListener('change', (e) => {
 				// console.log(e, e.target.result);
@@ -291,6 +427,7 @@ class Main {
 		})
 	}
 
+	// change this on confirm button
 	setImage = (src)=> {
 		this.editedImage.src = src; // data:base64 image/png .......
 	}
@@ -303,6 +440,7 @@ class Main {
 		return this.imageData;
 	}
 
+	// use this to show updating data
 	setImageData = (data) => {
 		// this new data's reference is different(create by " new ImageData(data, width) ") ,referene is changed
 		this.imageData = data;
