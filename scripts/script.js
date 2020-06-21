@@ -1,11 +1,11 @@
 "use strict"
 
 class SelectRect {
-	constructor({setImage, getImage, setImageData, getImageData}) {
+	constructor({setImage, getImage, setDisplayImageData, getDisplayImageData}) {
 		this.setImage = setImage;
 		this.getImage = getImage;
-		this.setImageData = setImageData;
-		this.getImageData = getImageData;
+		this.setDisplayImageData = setDisplayImageData;
+		this.getDisplayImageData = getDisplayImageData;
 
 		this.position = null;
 		this.canvasOffset = null;
@@ -96,7 +96,7 @@ class SelectRect {
 
 		console.log(x1, y1, x2, y2);
 		
-		let image = new ImageData(new Uint8ClampedArray(this.getImageData().data), this.getImageData().width);
+		let image = new ImageData(new Uint8ClampedArray(this.getDisplayImageData().data), this.getDisplayImageData().width);
 		let data = image.data;
 
 		console.log(data);
@@ -116,7 +116,7 @@ class SelectRect {
 		console.log(data);
 		canvas.getContext('2d').putImageData(image, 0, 0);
 
-		this.setImageData(image);
+		this.setDisplayImageData(image);
 
 	}
 
@@ -289,7 +289,7 @@ class Crop {
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-		this.setImage(getImageFromImageData(imageData, width, height));
+		this.setImage(getImageSrcFromImageData(imageData));
 		this.hideCropRect();
 		this.resetConfirmButton();
 	}
@@ -297,9 +297,9 @@ class Crop {
 }
 
 class ImageAdjustments {
-	constructor({getImageData, setImageData}) {
-		this.getImageData = getImageData;
-		this.setImageData = setImageData;
+	constructor({getDisplayImageData, setDisplayImageData}) {
+		this.getDisplayImageData = getDisplayImageData;
+		this.setDisplayImageData = setDisplayImageData;
 	}
 	changeBrightNess(data, i, brightnessValue) {		
 		// brightness
@@ -332,7 +332,7 @@ class ImageAdjustments {
 	}
 	applyChangesToCanvas = (changes) => {
 
-		let imageData = new ImageData(new Uint8ClampedArray(this.getImageData().data), this.getImageData().width);
+		let imageData = new ImageData(new Uint8ClampedArray(this.getDisplayImageData().data), this.getDisplayImageData().width);
 		let data = imageData.data;
 		let brightnessValue = parseInt(changes.brightness) || 0;
 		let contrastValue = parseInt(changes.contrast) || 0;
@@ -351,10 +351,12 @@ class ImageAdjustments {
 
 class Rotate {
 	
-	constructor({getImageData, setImageData, getImage}) {
-		this.getImageData = getImageData;
-		this.setImageData = setImageData;
+	constructor({getDisplayImageData, setDisplayImageData, getImage, setImage, ctx}) {
+		console.log(ctx);
+		this.getDisplayImageData = getDisplayImageData;
+		this.setDisplayImageData = setDisplayImageData;
 		this.getImage = getImage;
+		this.setImage = setImage;
 		this.ctx = null;
 	}
 
@@ -363,24 +365,31 @@ class Rotate {
 	}
 
 	rotateImage(changes) {
-		this.ctx = canvas.getContext('2d');
+		// this.ctx = canvas.getContext('2d');
 		let rotateValue = parseInt(changes.rotate) || 0;
 		this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-		this.ctx.save();
-		this.ctx.translate(canvas.width/2, canvas.height/2);
+		
+		this.ctx.save(); //save the initial transformation (translation)
+		this.ctx.translate(canvas.width/2, canvas.height/2); // (move to the center so image rotates from center not from top-left corner)
+		
 		// rotate the canvas
 		this.ctx.rotate((Math.PI / 180) * rotateValue);
-		// draw image on canvas (image will be drawn on canvas as it is not rotated (its like tranform of the html element but that will not effect the drawing))
+		// rotating the context will clear the image so we need to draw image (drawImage is more efficent then putImageData(use put imageData only when working with pixels))
+
+		// draw image on canvas (image will be drawn on canvas as it is not rotated (its like tranform of the html element but that will not effect the drawing)) (think of it as frame(canvas) and photo(context), it is rotating the context but not canvas)
 		this.ctx.drawImage(this.getImage(), -canvas.width/2, -canvas.height/2, canvas.width, canvas.height);
 		
-		// code works perfect upto here (but the problem is if we try to adjust brightness, the adjustment class uses the original image(or edited image) to do so but that is not rotated so we need to update that as well, or adjusting the image will cancel the rotation)
-
 		// changing the imageData because putImageData used in applyChangesToCanvas(for adjustment) doesnot depends on rotaion of ctx (its an array for whole canvas, we need rotated arry for it to show rotated image), now we are changing the orginalImageData (array) to rotated image array 
 		let imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
 		// above we just rotate the canvas, now get the image data of rotated canvas and save the data
-		this.setImageData(new ImageData(new Uint8ClampedArray(imageData.data), imageData.width));
+		this.setDisplayImageData(new ImageData(new Uint8ClampedArray(imageData.data), imageData.width));
 
 		// restore's the translate we done to move to center
+
+		// console.log('called from rotate');
+		// this.setImage(this.getImage(), -canvas.width/2, -canvas.height/2);
+
+
 		this.ctx.restore();
 	}
 }
@@ -391,27 +400,32 @@ class Main {
 	imageLoaded = false;
 	prevChangeName = null;
 
-	constructor() {
-		this.changes = {};
-		this.fileReader = new FileReader();
-		this.image = new Image();
-		this.editedImage = new Image();
-		this.ctx = null;
-		this.selectRectObject = new SelectRect({setImage: this.setImage, getImage: this.getImage, getImageData: this.getImageData, setImageData: this.setImageData});
-		this.cropObject = new Crop({setImage: this.setImage});
-		this.imageAdjustmentObject = new ImageAdjustments({setImageData: this.setImageData, getImageData: this.getImageData});
-		this.rotateObject = new Rotate({setImageData: this.setImageData, getImageData: this.getImageData, getImage: this.getImage});
-		// eventListeners
-        this.fileReader.onload = this.handleFileReader
-		// first time
-		this.image.onload = () => {
-			this.editedImage.src = this.image.src;
-		};
-		// first time and after editing
-		this.editedImage.onload = this.reRenderCanvas;
 
-		window.addEventListener('resize', this.reRenderCanvas);
+	constructor() {
 		window.addEventListener('load', (e) => {
+
+			this.ctx = canvas.getContext('2d');	
+			this.changes = {};
+			this.fileReader = new FileReader();
+			// this.image = new Image();
+			this.image = new Image();
+			this.imageOffset = {left: 0, top: 0};
+			this.selectRectObject = new SelectRect({setImage: this.setImage, getImage: this.getImage, getDisplayImageData: this.getDisplayImageData, setDisplayImageData: this.setDisplayImageData});
+			this.cropObject = new Crop({setImage: this.setImage});
+			this.imageAdjustmentObject = new ImageAdjustments({setDisplayImageData: this.setDisplayImageData, getDisplayImageData: this.getDisplayImageData});
+			this.rotateObject = new Rotate({setDisplayImageData: this.setDisplayImageData, getDisplayImageData: this.getDisplayImageData, getImage: this.getImage, setImage: this.setImage, ctx: this.ctx});
+			this.rotateObject.initializeCtx(this.ctx);
+		
+			// eventListeners
+			this.fileReader.onload = this.handleFileReader
+			// first time
+			// this.image.onload = () => {
+				// this.originalImage.src = this.image.src;
+			// };
+			// first time and after editing
+			this.image.onload = this.reRenderCanvas;
+
+
 			brightness_input.onchange = this.onChange;
 			contrast_input.onchange = this.onChange;
 			saturation_input.onchange = this.onChange;
@@ -425,23 +439,44 @@ class Main {
 				this.fileReader.readAsDataURL(e.target.files[0]);
 			})
 		})
+		window.addEventListener('resize', this.reRenderCanvas);
 	}
 
-	// change this on confirm button
-	setImage = (src)=> {
-		this.editedImage.src = src; // data:base64 image/png .......
+	// change this on confirm button (change the image)
+	setImage = (input, left, top)=> {
+		// this.imageOffset.left = left|0;
+		// this.imageOffset.top = top|0;
+		console.log(typeof(input), input);
+		if(input instanceof Image) {
+			console.log('image');
+			this.image.src = input.src;
+		}
+		else if(typeof(input) === "string") { // instance of string doesnot work until the object is created using new String() constructor
+			console.log('src');
+			this.image.src = input; // data:base64 image/png .......
+		}
+		else if(input instanceof ImageData) {
+			console.log('imageData');
+			this.input.src = getImageSrcFromImageData(input)
+		}
+			// this.imageDimentions = {left: left|0, top: top|0, width: width|this.image.width ,height: height|this.image.height}
 	}
 	
 	getImage = ()=> {
-		return this.editedImage;
+		return this.image;
 	}
 
-	getImageData = () => {
+	// return image data (not displaying image data) (image data without confirmed chnages (with only confirmed changes))
+	getImageData = ()=> {
+		return this.ctx.getImageData(0, 0, canvas.width, canvas.height);
+	}
+
+	getDisplayImageData = () => {
 		return this.imageData;
 	}
 
-	// use this to show updating data
-	setImageData = (data) => {
+	// use this to show updating data (temp change display image)
+	setDisplayImageData = (data) => {
 		// this new data's reference is different(create by " new ImageData(data, width) ") ,referene is changed
 		this.imageData = data;
 	}
@@ -471,7 +506,7 @@ class Main {
 			if(e.target.name === 'rotate') {
 				// only once for rotate
 				if(this.prevChangeName !== 'rotate') {
-					this.editedImage.src = canvas.toDataURL('image/png');
+					this.image.src = canvas.toDataURL('image/png');
 				}
 				this.prevChangeName = 'rotate';
 				this.rotateObject.rotateImage(this.changes);
@@ -484,8 +519,8 @@ class Main {
 
 	changeCanvasDimensions = (imageHeight, imageWidth) => {
 		let {height: availableHeight, width: availableWidth} = photo_container.getBoundingClientRect();
-		imageHeight = imageHeight || this.editedImage.height;
-		imageWidth = imageWidth || this.editedImage.width;
+		imageHeight = imageHeight || this.image.height;
+		imageWidth = imageWidth || this.image.width;
 
 		let ratio = availableWidth/imageWidth;
 		if((imageHeight*ratio) > availableHeight) {
@@ -503,19 +538,28 @@ class Main {
 		if(e.type === 'load'){
 			this.imageLoaded = true;
 		}
-		this.changeCanvasDimensions();
-		if(!this.imageLoaded) 
+		if(!this.imageLoaded)
 			return;
 		
-		this.ctx = canvas.getContext('2d');
-		this.ctx.drawImage(this.editedImage, 0, 0, canvas.width, canvas.height);
+		console.log('rerender');
+		
+		this.changeCanvasDimensions();
+		
+		// this.ctx = canvas.getContext('2d');
+		
+		// let left = this.imageDimentions.left|0;
+		// let top = this.imageDimentions.top|0;
+		// let width = this.imageDimentions.width|canvas.width;
+		// let height = this.imageDimentions.height|canvas.height;
+		this.ctx.drawImage(this.image, this.imageOffset.left, this.imageOffset.top, canvas.width, canvas.height);
 		let imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
 		this.imageData = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width);
-		this.rotateObject.initializeCtx(this.ctx);
+		// this.rotateObject.initializeCtx(this.ctx);
 	}
 
 	handleFileReader = (e) => {
 		this.image.src = e.target.result;
+		// this.imageDimentions = {left: 0, top: 0, width: this.image.width, heihgt: this.image.height}
 	}
 
 }
@@ -523,11 +567,19 @@ class Main {
 
 let obj = new Main();
 
-const getImageFromImageData = (imageData, width, height) => {
+const getImageSrcFromImageData = (imageData) => {
 	let canvas = document.createElement('canvas');
+	canvas.width = imageData.width;
+	canvas.height = imageData.height;
 	let ctx = canvas.getContext('2d');
-	canvas.width = width;
-	canvas.height = height;
 	ctx.putImageData(imageData, 0, 0);
+	return canvas.toDataURL('image/png');
+}
+const getImageSrcFromImage = (image) => {
+	let canvas = document.createElement('canvas');
+	canvas.width = image.width;
+	canvas.height = image.height;
+	let ctx = canvas.getContext('2d');
+	ctx.drawImage(image, 0, 0, image.width, image.height);
 	return canvas.toDataURL('image/png');
 }
