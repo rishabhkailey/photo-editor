@@ -1,11 +1,71 @@
 "use strict"
 
-class SelectRect {
-	constructor({setImage, getImage, setDisplayImageData, getDisplayImageData}) {
-		this.setImage = setImage;
-		this.getImage = getImage;
+class SelectedArea {
+	selectedArea = [];
+	initialized = false;
+
+	constructor({getImageData, getDisplayImageData, setDisplayImageData}) {
+		this.getImageData = getImageData;
 		this.setDisplayImageData = setDisplayImageData;
 		this.getDisplayImageData = getDisplayImageData;
+	}
+	
+	getSelectedArea = ()=> { 
+		return this.selectedArea;
+	}
+	setSelectedArea = (area)=> {
+		this.selectedArea = area;
+		this.showSelectedArea()
+	}
+
+	showSelectedArea = ()=> {
+
+		let image = new ImageData(new Uint8ClampedArray(this.getImageData().data), this.getImageData().width);
+		let data = image.data;
+
+		canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+
+		for(let i=0; i<image.height; i++) {
+			for(let j=0; j<image.width; j++) {
+				if(!this.selectedArea[i][j]) {
+					data[(i*image.width + j)*4 + 3] = 127;
+				}
+			}
+		}
+
+		canvas.getContext('2d').putImageData(image, 0, 0);
+
+		this.setDisplayImageData(image);
+	}
+	
+	hideSelectedArea = ()=> {
+
+		let image = new ImageData(new Uint8ClampedArray(this.getDisplayImageData().data), this.getDisplayImageData().width);
+		let data = image.data;
+
+		canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+
+		for(let i=0; i<image.height; i++) {
+			for(let j=0; j<image.width; j++) {
+				if(!this.selectedArea[i][j]) {
+					data[(i*image.width + j)*4 + 3] = 255;
+				}
+			}
+		}
+
+		canvas.getContext('2d').putImageData(image, 0, 0);
+
+		this.setDisplayImageData(image);
+	}
+
+}
+
+class SelectRect {
+	constructor({selectedArea}) {
+		
+		this.selectedArea = selectedArea;
+		this.getSelectedArea = selectedArea.getSelectedArea;
+		this.setSelectedArea = selectedArea.setSelectedArea;
 
 		this.position = null;
 		this.canvasOffset = null;
@@ -14,6 +74,8 @@ class SelectRect {
 		this.bottomRight = null;
 
 		this.currSelectionRect = null;
+
+		this.isSelcting = false;
 	}
 
 	drawSelectionArea = (e)=> {
@@ -65,10 +127,6 @@ class SelectRect {
 		y1 = parseInt(y1 - this.canvasOffset.y);
 		y2 = parseInt(y2 - this.canvasOffset.y);
 
-		if(!this.currSelectionRect) {
-			this.currSelectionRect = this.createSelectionRect();
-		}
-
 		this.currSelectionRect.style.transform = `translate(${x1}px, ${y1}px)`;
 		this.currSelectionRect.style.width = `${x2 - x1}px`;
 		this.currSelectionRect.style.height = `${y2 - y1}px`;
@@ -94,42 +152,50 @@ class SelectRect {
 		let x2 = parseInt(this.bottomRight.x - this.canvasOffset.x);
 		let y2 = parseInt(this.bottomRight.y - this.canvasOffset.y);
 
-		console.log(x1, y1, x2, y2);
-		
-		let image = new ImageData(new Uint8ClampedArray(this.getDisplayImageData().data), this.getDisplayImageData().width);
-		let data = image.data;
-
-		console.log(data);
-		canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-
-		for(let i=0; i<image.height; i++) {
-			for(let j=0; j<image.width; j++) {
-				if(!(i>y1 && j>x1 && i<y2 && j<x2)) {
-					// data[(i*image.width + j)*4 + 0] = 255;
-					// data[(i*image.width + j)*4 + 1] = 255;
-					// data[(i*image.width + j)*4 + 2] = 255;
-					data[(i*image.width + j)*4 + 3] = 127;
-				}
+		let area = this.getSelectedArea();
+		console.log(area.length, area[0].length);
+		for(let i=y1; i<=y2; i++) {
+			for(let j=x1; j<=x2; j++) {
+				area[i][j] = true;
 			}
 		}
 
-		console.log(data);
-		canvas.getContext('2d').putImageData(image, 0, 0);
+		this.setSelectedArea(area);
+		console.log(this.currSelectionRect);
+		canvas_container.removeChild(this.currSelectionRect);
+	}
 
-		this.setDisplayImageData(image);
+	initializeSelectedArea = ()=> {
+		this.selectedArea.initialized = true
+		let area = [];
+		for(let i=0; i<canvas.height+10; i++) {
+			let row = [];
+			for(let j=0; j<canvas.width+10; j++) {
+				row.push(false);
+			}
+			area.push(row);
+		}
 
+		this.setSelectedArea(area);
+
+		console.log(area.length, area[0].length)
 	}
 
 	init = ()=> {
+		this.initializeSelectedArea();
 		this.canvasOffset = {x: canvas.getBoundingClientRect().left, y: canvas.getBoundingClientRect().top};
 		
 		canvas.onmousedown = (e)=> {
+			this.currSelectionRect = this.createSelectionRect();
 			this.position = {x: e.clientX, y: e.clientY};
-			window.onmousemove = this.drawSelectionArea;
-		}
-		window.onmouseup = (e)=> {
-			window.onmousemove = null;
-			this.finaliseSelction();
+			canvas.onmousemove = this.drawSelectionArea;
+			this.isSelcting = true;
+			
+			window.onmouseup = (e)=> {
+				window.onmousemove = null;
+				window.onmouseup = null;
+				this.finaliseSelction();
+			}
 		}
 	}
 
@@ -297,9 +363,17 @@ class Crop {
 }
 
 class ImageAdjustments {
-	constructor({getDisplayImageData, setDisplayImageData}) {
+	constructor({getDisplayImageData, setDisplayImageData, setImage, selectedArea}) {
 		this.getDisplayImageData = getDisplayImageData;
 		this.setDisplayImageData = setDisplayImageData;
+		this.selectedArea = selectedArea;
+		this.setImage = setImage;
+		apply_button.onclick = this.applyChanges;
+	}
+	applyChanges = ()=> {
+		console.log("apply changes");
+		this.selectedArea.hideSelectedArea();
+		this.setImage(canvas.toDataURL('image/png'))
 	}
 	changeBrightNess(data, i, brightnessValue) {		
 		// brightness
@@ -332,20 +406,43 @@ class ImageAdjustments {
 	}
 	applyChangesToCanvas = (changes) => {
 
+		// if(this.selectedArea.initialized === true) {
+		// 	this.selectedArea.hideSelectedArea();
+		// }
+
 		let imageData = new ImageData(new Uint8ClampedArray(this.getDisplayImageData().data), this.getDisplayImageData().width);
 		let data = imageData.data;
 		let brightnessValue = parseInt(changes.brightness) || 0;
 		let contrastValue = parseInt(changes.contrast) || 0;
 		let saturationValue = parseInt(changes.saturation) || 0;
+
+		let width = canvas.width;
+
 		canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 
+		let j = 0;
 		for(let i=0; i<data.length; i+=4) {
-			this.changeBrightNess(data, i, brightnessValue);
-			this.changeContrast(data, i, contrastValue);
-			this.changeSatruration(data, i, saturationValue);
+			if(this.validPixel(j++, width)) {
+				this.changeBrightNess(data, i, brightnessValue);
+				this.changeContrast(data, i, contrastValue);
+				this.changeSatruration(data, i, saturationValue);
+			}
 		}
+		console.log(j);
 
 		canvas.getContext('2d').putImageData(imageData, 0, 0);
+		this.setDisplayImageData(imageData);
+	}
+	validPixel = (i, width)=> {
+		if(this.selectedArea.initialized == false) {
+			return true;
+		}
+		let x = parseInt(i/width);
+		let y = parseInt(i%width);
+
+		// console.log(x, y);
+
+		return this.selectedArea.selectedArea[x][y];
 	}
 }
 
@@ -386,10 +483,6 @@ class Rotate {
 
 		// restore's the translate we done to move to center
 
-		// console.log('called from rotate');
-		// this.setImage(this.getImage(), -canvas.width/2, -canvas.height/2);
-
-
 		this.ctx.restore();
 	}
 }
@@ -400,7 +493,6 @@ class Main {
 	imageLoaded = false;
 	prevChangeName = null;
 
-
 	constructor() {
 		window.addEventListener('load', (e) => {
 
@@ -410,21 +502,19 @@ class Main {
 			// this.image = new Image();
 			this.image = new Image();
 			this.imageOffset = {left: 0, top: 0};
-			this.selectRectObject = new SelectRect({setImage: this.setImage, getImage: this.getImage, getDisplayImageData: this.getDisplayImageData, setDisplayImageData: this.setDisplayImageData});
+			this.selectedArea = new SelectedArea({getImageData: this.getImageData, getDisplayImageData: this.getDisplayImageData, setDisplayImageData: this.setDisplayImageData});
+			this.selectRectObject = new SelectRect({selectedArea: this.selectedArea});
 			this.cropObject = new Crop({setImage: this.setImage});
-			this.imageAdjustmentObject = new ImageAdjustments({setDisplayImageData: this.setDisplayImageData, getDisplayImageData: this.getDisplayImageData});
+			this.imageAdjustmentObject = new ImageAdjustments({setDisplayImageData: this.setDisplayImageData, getDisplayImageData: this.getDisplayImageData, setImage: this.setImage, selectedArea: this.selectedArea});
 			this.rotateObject = new Rotate({setDisplayImageData: this.setDisplayImageData, getDisplayImageData: this.getDisplayImageData, getImage: this.getImage, setImage: this.setImage, ctx: this.ctx});
 			this.rotateObject.initializeCtx(this.ctx);
 		
 			// eventListeners
 			this.fileReader.onload = this.handleFileReader
-			// first time
-			// this.image.onload = () => {
-				// this.originalImage.src = this.image.src;
-			// };
 			// first time and after editing
-			this.image.onload = this.reRenderCanvas;
-
+			this.image.onload = (e) => {
+				this.reRenderCanvas(e);
+			}
 
 			brightness_input.onchange = this.onChange;
 			contrast_input.onchange = this.onChange;
@@ -443,20 +533,14 @@ class Main {
 	}
 
 	// change this on confirm button (change the image)
-	setImage = (input, left, top)=> {
-		// this.imageOffset.left = left|0;
-		// this.imageOffset.top = top|0;
-		console.log(typeof(input), input);
+	setImage = (input)=> {
 		if(input instanceof Image) {
-			console.log('image');
 			this.image.src = input.src;
 		}
 		else if(typeof(input) === "string") { // instance of string doesnot work until the object is created using new String() constructor
-			console.log('src');
 			this.image.src = input; // data:base64 image/png .......
 		}
 		else if(input instanceof ImageData) {
-			console.log('imageData');
 			this.input.src = getImageSrcFromImageData(input)
 		}
 			// this.imageDimentions = {left: left|0, top: top|0, width: width|this.image.width ,height: height|this.image.height}
@@ -468,7 +552,7 @@ class Main {
 
 	// return image data (not displaying image data) (image data without confirmed chnages (with only confirmed changes))
 	getImageData = ()=> {
-		return this.ctx.getImageData(0, 0, canvas.width, canvas.height);
+		return imageToImageData(this.image);
 	}
 
 	getDisplayImageData = () => {
@@ -502,12 +586,8 @@ class Main {
 			return;
 		}
 		this.changes[e.target.name] = e.target.value;
-		if(this.imageLoaded)
+		if(this.imageLoaded) {
 			if(e.target.name === 'rotate') {
-				// only once for rotate
-				if(this.prevChangeName !== 'rotate') {
-					this.image.src = canvas.toDataURL('image/png');
-				}
 				this.prevChangeName = 'rotate';
 				this.rotateObject.rotateImage(this.changes);
 			}
@@ -515,6 +595,7 @@ class Main {
 				this.prevChangeName = 'adjustment';
 				this.imageAdjustmentObject.applyChangesToCanvas(this.changes);
 			}
+		}
 	}
 
 	changeCanvasDimensions = (imageHeight, imageWidth) => {
@@ -541,20 +622,12 @@ class Main {
 		if(!this.imageLoaded)
 			return;
 		
-		console.log('rerender');
-		
 		this.changeCanvasDimensions();
-		
-		// this.ctx = canvas.getContext('2d');
-		
-		// let left = this.imageDimentions.left|0;
-		// let top = this.imageDimentions.top|0;
-		// let width = this.imageDimentions.width|canvas.width;
-		// let height = this.imageDimentions.height|canvas.height;
-		this.ctx.drawImage(this.image, this.imageOffset.left, this.imageOffset.top, canvas.width, canvas.height);
+
+		this.ctx.drawImage(this.image, 0, 0, canvas.width, canvas.height);
 		let imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
 		this.imageData = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width);
-		// this.rotateObject.initializeCtx(this.ctx);
+
 	}
 
 	handleFileReader = (e) => {
@@ -568,18 +641,30 @@ class Main {
 let obj = new Main();
 
 const getImageSrcFromImageData = (imageData) => {
-	let canvas = document.createElement('canvas');
-	canvas.width = imageData.width;
-	canvas.height = imageData.height;
-	let ctx = canvas.getContext('2d');
+	let canvas1 = document.createElement('canvas');
+	canvas1.width = imageData.width;
+	canvas1.height = imageData.height;
+	let ctx = canvas1.getContext('2d');
 	ctx.putImageData(imageData, 0, 0);
-	return canvas.toDataURL('image/png');
+	return canvas1.toDataURL('image/png');
 }
+
+const imageToImageData = (image)=> {
+	let canvas1 = document.createElement('canvas');
+	// because original image resolution is changed according to the display size, i.e. = canvas resolution
+	canvas1.width = canvas.width;
+	canvas1.height = canvas.height;
+	let ctx = canvas1.getContext('2d');
+	ctx.drawImage(image, 0, 0, canvas1.width, canvas1.height);
+	console.log(ctx.getImageData(0, 0, canvas1.height, canvas1.width));
+	return ctx.getImageData(0, 0, canvas1.width, canvas1.height);
+}
+
 const getImageSrcFromImage = (image) => {
-	let canvas = document.createElement('canvas');
-	canvas.width = image.width;
-	canvas.height = image.height;
-	let ctx = canvas.getContext('2d');
+	let canvas1 = document.createElement('canvas');
+	canvas1.width = image.width;
+	canvas1.height = image.height;
+	let ctx = canvas1.getContext('2d');
 	ctx.drawImage(image, 0, 0, image.width, image.height);
-	return canvas.toDataURL('image/png');
+	return canvas1.toDataURL('image/png');
 }
