@@ -1,7 +1,7 @@
 "use strict"
 
 class SelectedArea {
-	selectedArea = [];
+	selectedArea = null;
 	initialized = false;
 
 	constructor({getImageData, getDisplayImageData, setDisplayImageData}) {
@@ -19,14 +19,13 @@ class SelectedArea {
 	}
 
 	showSelectedArea = ()=> {
-
 		let image = new ImageData(new Uint8ClampedArray(this.getImageData().data), this.getImageData().width);
 		let data = image.data;
 
 		canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 
-		for(let i=0; i<image.height; i++) {
-			for(let j=0; j<image.width; j++) {
+		for(let i=0; i<image.height|0; i++) {
+			for(let j=0; j<image.width|0; j++) {
 				if(!this.selectedArea[i][j]) {
 					data[(i*image.width + j)*4 + 3] = 127;
 				}
@@ -39,6 +38,9 @@ class SelectedArea {
 	}
 	
 	hideSelectedArea = ()=> {
+
+		if(!this.initialized | !this.selectedArea)
+			return;
 
 		let image = new ImageData(new Uint8ClampedArray(this.getDisplayImageData().data), this.getDisplayImageData().width);
 		let data = image.data;
@@ -363,7 +365,8 @@ class Crop {
 }
 
 class ImageAdjustments {
-	constructor({getDisplayImageData, setDisplayImageData, setImage, selectedArea}) {
+	constructor({getDisplayImageData, setDisplayImageData, setImage, selectedArea, getImageData}) {
+		this.getImageData = getImageData;
 		this.getDisplayImageData = getDisplayImageData;
 		this.setDisplayImageData = setDisplayImageData;
 		this.selectedArea = selectedArea;
@@ -406,11 +409,7 @@ class ImageAdjustments {
 	}
 	applyChangesToCanvas = (changes) => {
 
-		// if(this.selectedArea.initialized === true) {
-		// 	this.selectedArea.hideSelectedArea();
-		// }
-
-		let imageData = new ImageData(new Uint8ClampedArray(this.getDisplayImageData().data), this.getDisplayImageData().width);
+		let imageData = new ImageData(new Uint8ClampedArray(this.getImageData().data), this.getImageData().width);
 		let data = imageData.data;
 		let brightnessValue = parseInt(changes.brightness) || 0;
 		let contrastValue = parseInt(changes.contrast) || 0;
@@ -428,7 +427,6 @@ class ImageAdjustments {
 				this.changeSatruration(data, i, saturationValue);
 			}
 		}
-		console.log(j);
 
 		canvas.getContext('2d').putImageData(imageData, 0, 0);
 		this.setDisplayImageData(imageData);
@@ -448,8 +446,8 @@ class ImageAdjustments {
 
 class Rotate {
 	
-	constructor({getDisplayImageData, setDisplayImageData, getImage, setImage, ctx}) {
-		console.log(ctx);
+	constructor({setImageData, getDisplayImageData, setDisplayImageData, getImage, setImage, ctx}) {
+		this.setImageData = setImageData;
 		this.getDisplayImageData = getDisplayImageData;
 		this.setDisplayImageData = setDisplayImageData;
 		this.getImage = getImage;
@@ -459,6 +457,30 @@ class Rotate {
 
 	initializeCtx(ctx) {
 		this.ctx = ctx;
+	}
+
+	init = ()=> {
+		bottom_option_input.style.display = 'block';
+		bottom_option_input.name = "rotate";
+		bottom_confirm_button.style.display = 'block';
+		bottom_confirm_button.name = "rotate";
+		bottom_confirm_button.onclick = this.confirmRotation;
+	}
+
+	hideOptions = ()=> {
+		bottom_option_input.style.display = 'none';
+		bottom_option_input.name = "";
+		bottom_confirm_button.style.display = 'none';
+		bottom_confirm_button.name = "rotate";
+		bottom_confirm_button.onclick = null;
+	}
+
+	confirmRotation = ()=> {
+		let imageData = this.getDisplayImageData();
+		console.log(this.setImagedata);
+		this.setImageData(new ImageData(new Uint8ClampedArray(imageData.data), imageData.width));
+		
+		this.hideOptions();
 	}
 
 	rotateImage(changes) {
@@ -490,12 +512,14 @@ class Rotate {
 class Main {
 	imageFile = null;
 	imageData = null;
+	displayImageData = null;
 	imageLoaded = false;
 	prevChangeName = null;
+	changeImageData = true; // image data should only be changed on setImage, displayImageData changes everytime
 
 	constructor() {
 		window.addEventListener('load', (e) => {
-
+	
 			this.ctx = canvas.getContext('2d');	
 			this.changes = {};
 			this.fileReader = new FileReader();
@@ -505,8 +529,8 @@ class Main {
 			this.selectedArea = new SelectedArea({getImageData: this.getImageData, getDisplayImageData: this.getDisplayImageData, setDisplayImageData: this.setDisplayImageData});
 			this.selectRectObject = new SelectRect({selectedArea: this.selectedArea});
 			this.cropObject = new Crop({setImage: this.setImage});
-			this.imageAdjustmentObject = new ImageAdjustments({setDisplayImageData: this.setDisplayImageData, getDisplayImageData: this.getDisplayImageData, setImage: this.setImage, selectedArea: this.selectedArea});
-			this.rotateObject = new Rotate({setDisplayImageData: this.setDisplayImageData, getDisplayImageData: this.getDisplayImageData, getImage: this.getImage, setImage: this.setImage, ctx: this.ctx});
+			this.imageAdjustmentObject = new ImageAdjustments({getImageData: this.getImageData, setDisplayImageData: this.setDisplayImageData, getDisplayImageData: this.getDisplayImageData, setImage: this.setImage, selectedArea: this.selectedArea});
+			this.rotateObject = new Rotate({setImageData: this.setImage, setDisplayImageData: this.setDisplayImageData, getDisplayImageData: this.getDisplayImageData, getImage: this.getImage, setImage: this.setImage, ctx: this.ctx});
 			this.rotateObject.initializeCtx(this.ctx);
 		
 			// eventListeners
@@ -522,7 +546,7 @@ class Main {
 			bottom_option_input.onchange = this.onChange;
 			crop_button.onclick = this.cropObject.onCropClick;
 			select_rect.onclick = this.selectRectObject.init; 
-			rotate_button.onclick = () => {this.bottomOption('rotate')}
+			rotate_button.onclick = this.rotateObject.init;
 			image_input.addEventListener('change', (e) => {
 				// console.log(e, e.target.result);
 				this.imageFile = e.target.files[0];
@@ -534,6 +558,10 @@ class Main {
 
 	// change this on confirm button (change the image)
 	setImage = (input)=> {
+		if(!input)
+			return;
+
+		console.log(input, input instanceof Image);
 		if(input instanceof Image) {
 			this.image.src = input.src;
 		}
@@ -541,8 +569,13 @@ class Main {
 			this.image.src = input; // data:base64 image/png .......
 		}
 		else if(input instanceof ImageData) {
-			this.input.src = getImageSrcFromImageData(input)
+			this.image.src = getImageSrcFromImageData(input)
 		}
+		this.changeImageData = true;
+		// console.log('image src changed');
+		// imageData will be initialized in image on load
+		// this.imageData = imageToImageData(this.image);
+		// console.log(this.imageData);
 			// this.imageDimentions = {left: left|0, top: top|0, width: width|this.image.width ,height: height|this.image.height}
 	}
 	
@@ -552,22 +585,17 @@ class Main {
 
 	// return image data (not displaying image data) (image data without confirmed chnages (with only confirmed changes))
 	getImageData = ()=> {
-		return imageToImageData(this.image);
+		return this.imageData;
 	}
 
 	getDisplayImageData = () => {
-		return this.imageData;
+		return this.displayImageData;
 	}
 
 	// use this to show updating data (temp change display image)
 	setDisplayImageData = (data) => {
 		// this new data's reference is different(create by " new ImageData(data, width) ") ,referene is changed
-		this.imageData = data;
-	}
-
-	bottomOption(button) {
-		bottom_option_input.style.display = 'block';
-		bottom_option_input.name = "rotate";
+		this.displayImageData = data;
 	}
 
 	showConfirmButton(name) {
@@ -592,7 +620,7 @@ class Main {
 				this.rotateObject.rotateImage(this.changes);
 			}
 			else {
-				this.prevChangeName = 'adjustment';
+				this.prevChangeName = 'image_adjustment';
 				this.imageAdjustmentObject.applyChangesToCanvas(this.changes);
 			}
 		}
@@ -626,8 +654,12 @@ class Main {
 
 		this.ctx.drawImage(this.image, 0, 0, canvas.width, canvas.height);
 		let imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
-		this.imageData = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width);
+		this.displayImageData = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width);
 
+		if(this.changeImageData) { // first when image load
+			this.imageData = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width);
+			this.changeImageData = false;
+		}
 	}
 
 	handleFileReader = (e) => {
