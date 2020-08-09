@@ -9,7 +9,8 @@ class App extends Component {
         super(props);
         this.state = {
             canvasFunctions: null,
-            isImageLoaded: false
+            isImageLoaded: false,
+            canvasElements: null
         }
     }
     
@@ -18,6 +19,10 @@ class App extends Component {
     }
 
     render() {
+        // state properties which we want to send to all feature interaction components
+        // for now = state of global component
+        let globalState = this.state;
+
         return <div className="d-flex flex-column justify-content-center align-items-stretch vw-100 vh-100">
             <div className="d-flex flex-row border" style={{flex: 3}}>
                 <div className="border" style={{flex: 3}}>
@@ -25,7 +30,7 @@ class App extends Component {
                 </div>
 
                 <div className="border" style={{flex: 1}}>
-                    <FeatureInteractions isImageLoaded={this.state.isImageLoaded} canvasFunctions={this.state.canvasFunctions}/>
+                    <FeatureInteractions {...globalState} />
                 </div>
             </div>
             <div className="border" style={{flex: 1}}>

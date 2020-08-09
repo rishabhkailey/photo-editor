@@ -10,7 +10,8 @@ class AdjustmentInteractions extends Component {
         this.changes = {
             brightness: 0,
             contrast: 0,
-            saturation: 0
+            saturation: 0,
+            extra: 0 // useless
         }
 
         this.state = {
@@ -81,8 +82,23 @@ class AdjustmentInteractions extends Component {
         this.props.canvasFunctions.setDisplayImage(image);
     }
 
-    onChange = (e)=> {
+    applyChangesToFullResImage = ()=> {  
+        // console.log(image);
+        let image = this.props.canvasFunctions.getFullResEditedImage();
+        let imageData = image.data;
 
+        for(let i=0; i<imageData.length; i+=4) {
+            this.changeBrightNess(imageData, i);
+            this.changeContrast(imageData, i);
+            this.changeSatruration(imageData, i);
+        }
+
+        
+        this.props.canvasFunctions.setFullResEditedImage(image);
+         
+    }
+
+    onChange = (e)=> {
         if(!this.state.isImageLoaded)
             return
 
@@ -91,6 +107,7 @@ class AdjustmentInteractions extends Component {
     }
 
     saveChanges = ()=> {
+        this.applyChangesToFullResImage();
         this.props.canvasFunctions.saveEdits();
         history.push("/");
     }
