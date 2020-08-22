@@ -172,7 +172,7 @@ class Crop extends Component {
 
     disableCrop = ()=> {
         window.onmousemove = null;
-        window.onmouseup = null;
+        window.onmouseup = null;    
         this.cropRectRef.current.onmousedown = null;
         console.log("disable Crop");
     }
@@ -184,34 +184,50 @@ class Crop extends Component {
 
         let {left, top, width, height} = this.cropRectRef.current.getBoundingClientRect();
         let {left: canvasLeft, top: canvasTop} = this.props.canvasElements.canvasContainer.current.getBoundingClientRect();
-        left = parseInt(left) - parseInt(canvasLeft);
-        top = parseInt(top) - parseInt(canvasTop);
-        width = parseInt(width);
-        height = parseInt(height);
+      
+        // dimentions of original crop rect
+        left = left - canvasLeft;
+        top = top - canvasTop;
+        width = width;
+        height = height;
 
         let image = this.props.canvasFunctions.getEditedImage();
-        let cropImage = new ImageData(width, height);;
+        let fullResImage = this.props.canvasFunctions.getFullResEditedImage();
+
+
+        // ------------------------------------SCALING------------------------------------------
+        let scaleX = fullResImage.width/image.width;
+        let scaleY = fullResImage.height/image.height;
+
+        let scaledWidth = width * scaleX;
+        let scaledHeight = height * scaleY;
+
+        let scaledTop = top * scaleY;
+        let scaledLeft = left * scaleX;
+
+        // ------------------------------------SCALING------------------------------------------
+
+        let cropImage = new ImageData(parseInt(scaledWidth), parseInt(scaledHeight));
 
         let index = 0;
 
-        let canvasWidth = image.width;
+        let imageWidth = parseInt(fullResImage.width);
 
-        for(let i=top; i<(top+height); i++) {
+        for(let i=parseInt(scaledTop); i<parseInt(scaledTop) + parseInt(scaledHeight); i++) {
         
-            for(let j=left; j<(left+width); j++) {
+            for(let j=parseInt(scaledLeft); j<parseInt(scaledLeft) + parseInt(scaledWidth); j++) {
         
-                let index1 = (i*width + j)*4;
-                let index2 = (i*canvasWidth + j)*4;
-                cropImage.data[index] = image.data[index2];
-                cropImage.data[index+1] = image.data[index2+1];
-                cropImage.data[index+2] = image.data[index2+2];
-                cropImage.data[index+3] = image.data[index2+3];
+                let index2 = (i*imageWidth + j)*4;
+                cropImage.data[index] = fullResImage.data[index2];
+                cropImage.data[index+1] = fullResImage.data[index2+1];
+                cropImage.data[index+2] = fullResImage.data[index2+2];
+                cropImage.data[index+3] = fullResImage.data[index2+3];
                 
                 index+=4;
             }
 
         }
-
+        this.props.canvasFunctions.setFullResEditedImage(cropImage);
         this.props.canvasFunctions.setDisplayImageAndSaveEdits(cropImage);
         history.push("/");
     }

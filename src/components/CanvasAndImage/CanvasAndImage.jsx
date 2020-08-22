@@ -55,8 +55,8 @@ class CanvasAndImage extends Component {
     }
 
     setFullResEditedImage = (image)=> {
+        console.log("setFullResEditedImage called");
         this.fullResEditedImage = new ImageData(new Uint8ClampedArray(image.data), image.width);
-        console.log(this.fullResEditedImage);
     }
 
     getEditedImage = ()=> {
@@ -103,9 +103,9 @@ class CanvasAndImage extends Component {
         if(!this.state.isImageLoaded)
             return;
         
-        let {width, height} = this.canvasContainerRef.current.getBoundingClientRect();
-        if(parseInt(width) - parseInt(image.width) > 10 || parseInt(height) - parseInt(image.height) > 10) {
-            console.log("scaling the image to canvas size ");
+        let {width, height} = this.canvasRef.current.getBoundingClientRect();
+        if(Math.abs(parseInt(width) - parseInt(image.width)) > 10 || Math.abs(parseInt(height) - parseInt(image.height)) > 10) {
+            console.log("in setDisplayImageAndSaveEdits and scaling the image to canvas size ", {width: image.width, height: image.height}, "to", {width, height});
 
             // scale image is asynchronous so we cannot return imagedata from it so instead we are calling setDisplayImageAndSaveEdits in it (it is not recurssion this fucntion will complete first)
             this.changeCanvasDimensions({width: image.width, height: image.height})
@@ -114,6 +114,7 @@ class CanvasAndImage extends Component {
 
         }
         else {
+            console.log("in setDisplayImageAndSaveEdits and calling setEditedImage and setDisplayImage");
             this.setEditedImage(image);
             this.setDisplayImage(image);
         }
@@ -179,7 +180,7 @@ class CanvasAndImage extends Component {
 		container.style.width = ratio*width+'px';
         container.style.height = ratio*height+'px';
         
-	}
+ 	}
     /*-------------------------CANVAS--------------------------*/
 
 
