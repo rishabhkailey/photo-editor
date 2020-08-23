@@ -4,6 +4,7 @@ import history from './../../history.js';
 
 import AdjustmentInteractoins from "./../AdjustmentInteractions/AdjustmentInteractions.jsx";
 import Crop from "./../Crop/Crop.jsx";
+import Rotate from "./../Rotate/Rotate.jsx";
 
 class FeaturesInteractions extends Component {
     render() {
@@ -14,8 +15,8 @@ class FeaturesInteractions extends Component {
                     <Route exact={true} path="/" render={()=> <div></div>}/>
                     <Route path="/adjustments" render={()=> <AdjustmentInteractoins {...globalState} />}/>
                     <Route path="/crop" render={()=> <Crop {...globalState} /> }/>
-                    <Route path="/select" render={()=> <div>select</div>}/>
-                    <Route path="/rotate" render={()=> <div>rotate</div>}/>
+                    <Route path="/select" render={()=> <div>select</div>} />
+                    <Route path="/rotate" render={()=> <Rotate {...globalState} /> }/>
                 </Switch>
             </Router>
         </div>
