@@ -108,36 +108,65 @@ class Rotate extends Component {
                 angle += angle_in_radian;
 
                 // assuming center to be 0, 0 relative value of pixel position after rotating will be diff * cos(angle_in_radian), diff * sin(angle_in_radian)
-                let x = parseInt(diff * Math.cos(angle));
-                let y = parseInt(diff * Math.sin(angle));
+                let x = diff * Math.cos(angle);
+                let y = diff * Math.sin(angle);
                 
                 
                 // position relative to center (not 0, 0)
                 x = center.x - x;
                 y = center.y - y;
 
-                
-                // if(!bool)
-                //     console.log(i , j , "to", x, y, angle, angle_in_radian * 180 / Math.PI);
-                   
-                bool = true;
-                
-                if(x >= width || x <= 0 || y >= height || y<= 0){ 
+                if(parseInt(x) >= width || parseInt(x) <= 0 || parseInt(y) >= height || parseInt(y) <= 0){ 
                     continue;
                 }
 
-                let index = (y*width + x)*4;
-                let index1 = (i*width + j)*4;
+                // if x = 1.7 that pixel is on 1 (30%) and on 2(70%) we have to color both accordingly else we will have some pixel left (without color) so for x, y total 4 combinations
+                let x1 = parseInt(x);
+                let x2 = x1 + 1;
+                let proportionX = x%1; // after decimal (if = .7 then x1 proprtion = 1 - .7 and x2's proportion is .7)
+
+                let y1 = parseInt(y);
+                let y2 = y1 + 1;
+                let proportionY = y%1; // y to y1 
+
+                this.colorProportionaly(rotatedImage.data, x1, y1, data, i, j, (proportionX) * (proportionY), width);
+                this.colorProportionaly(rotatedImage.data, x1, y2, data, i, j, (proportionX) * (1 - proportionY), width);
+                this.colorProportionaly(rotatedImage.data, x2, y1, data, i, j, (1 - proportionX) * (proportionY), width);
+                this.colorProportionaly(rotatedImage.data, x2, y2, data, i, j, (1 - proportionX) * (1 - proportionY), width);
                 
-                rotatedImage.data[index++] = data[index1++];
-                rotatedImage.data[index++] = data[index1++];
-                rotatedImage.data[index++] = data[index1++];
-                rotatedImage.data[index++] = data[index1++];
+                // let index = (y*width + x)*4;
+                // let index1 = (i*width + j)*4;
+                
+                // rotatedImage.data[index++] = data[index1++];
+                // rotatedImage.data[index++] = data[index1++];
+                // rotatedImage.data[index++] = data[index1++];
+                // rotatedImage.data[index++] = data[index1++];
             }
         }
 
         // console.log(rotatedImage, index);        
         canvasFunctions.setDisplayImage(rotatedImage);
+    }
+
+    colorProportionaly = (rotatedImageData, x, y, data, i, j, proportion, width) => {
+
+        let index = (y*width + x)*4;
+        let index1 = (i*width + j)*4;
+        
+        // rotatedImageData[index] = rotatedImageData[index] + (data[index1++] * proportion);
+        // rotatedImageData[index + 1] = rotatedImageData[index + 1] + (data[index1++] * proportion);
+        // rotatedImageData[index + 2] = rotatedImageData[index + 2] + (data[index1++] * proportion);
+        // rotatedImageData[index + 3] = rotatedImageData[index + 3] + (data[index1++] * proportion);
+    
+        // rotatedImageData[index] = (rotatedImageData[index] * (1 - proportion)) + (data[index1++] * proportion);
+        // rotatedImageData[index + 1] = (rotatedImageData[index + 1] * (1 - proportion)) + (data[index1++] * proportion);
+        // rotatedImageData[index + 2] = (rotatedImageData[index + 2] * (1 - proportion)) + (data[index1++] * proportion);
+        // rotatedImageData[index + 3] = (rotatedImageData[index + 3] * (1 - proportion)) + (data[index1++] * proportion);
+    
+        rotatedImageData[index] = data[index1++];
+        rotatedImageData[index + 1] = data[index1++];
+        rotatedImageData[index + 2] = data[index1++];
+        rotatedImageData[index + 3] = data[index1++];
     }
 
     render() {
