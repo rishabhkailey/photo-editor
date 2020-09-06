@@ -228,7 +228,6 @@ class Crop extends Component {
 
         }
         this.props.canvasFunctions.setFullResEditedImage(cropImage);
-        this.props.canvasFunctions.setDisplayImageAndSaveEdits(cropImage);
         history.push("/");
     }
 
