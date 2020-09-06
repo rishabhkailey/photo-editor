@@ -1,0 +1,151 @@
+[33mcommit 56cebba8e564e2181f8d51c921bceda4800162de[m[33m ([m[1;36mHEAD -> [m[1;32mrotation-logic-using-canvas-api[m[33m, [m[1;31morigin/rotation-logic-using-canvas-api[m[33m)[m
+Author: rishabhkailey <rishabhveersinghkailay@gmail.com>
+Date:   Sun Sep 6 18:07:28 2020 +0530
+
+    changed api and rotation logic
+
+[33mcommit ed38766199bfc807e8797688a59e892d230fae75[m
+Author: rishabhkailey <t-rishabhveer@everwell.org>
+Date:   Sun Sep 6 11:11:28 2020 +0530
+
+    fixed github secuirity issue
+
+[33mcommit a37f2f73679b33ee575145783ab22c69f1f48ac4[m
+Merge: 94745db 926e68a
+Author: Rishabhveer singh <44227973+rishabhkailey@users.noreply.github.com>
+Date:   Sun Aug 23 22:39:05 2020 +0530
+
+    Merge pull request #1 from rishabhkailey/dependabot/npm_and_yarn/websocket-extensions-0.1.4
+    
+    Bump websocket-extensions from 0.1.3 to 0.1.4
+
+[33mcommit 94745dbc9d17bf5e8e35d807ca51ac76e474e62d[m
+Merge: 2ef6b71 dc8b0ee
+Author: Rishabhveer singh <44227973+rishabhkailey@users.noreply.github.com>
+Date:   Sun Aug 23 22:38:45 2020 +0530
+
+    Merge pull request #2 from rishabhkailey/dependabot/npm_and_yarn/elliptic-6.5.3
+    
+    Bump elliptic from 6.5.2 to 6.5.3
+
+[33mcommit 2ef6b7143adb0edc8e0a3d350c28aeecc0adf42d[m
+Author: rishabhveer <t-rishabhveer@everwell.org>
+Date:   Sun Aug 23 22:30:07 2020 +0530
+
+    added rotate feature, need to fix the blind spots and need to improve performance of rotate
+
+[33mcommit 06d312c1006195c734350fb2c8e2596629214520[m
+Author: rishabhveer <t-rishabhveer@everwell.org>
+Date:   Sat Aug 22 14:10:04 2020 +0530
+
+    improved croped image quality
+
+[33mcommit 5380691df271e51a8f0f38b94c343024c7610698[m
+Author: rishabhveer <t-rishabhveer@everwell.org>
+Date:   Sun Aug 9 21:20:30 2020 +0530
+
+    added crop feature
+
+[33mcommit dc8b0eee3971aa5452b6d11dc771e8df32b34a4f[m
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Sun Aug 2 16:30:55 2020 +0000
+
+    Bump elliptic from 6.5.2 to 6.5.3
+    
+    Bumps [elliptic](https://github.com/indutny/elliptic) from 6.5.2 to 6.5.3.
+    - [Release notes](https://github.com/indutny/elliptic/releases)
+    - [Commits](https://github.com/indutny/elliptic/compare/v6.5.2...v6.5.3)
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+[33mcommit 926e68a34e9434a8e37bb0a37111058d82242535[m
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Sun Aug 2 16:30:54 2020 +0000
+
+    Bump websocket-extensions from 0.1.3 to 0.1.4
+    
+    Bumps [websocket-extensions](https://github.com/faye/websocket-extensions-node) from 0.1.3 to 0.1.4.
+    - [Release notes](https://github.com/faye/websocket-extensions-node/releases)
+    - [Changelog](https://github.com/faye/websocket-extensions-node/blob/master/CHANGELOG.md)
+    - [Commits](https://github.com/faye/websocket-extensions-node/compare/0.1.3...0.1.4)
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+[33mcommit a200d030fbd8e9cdbc2fa1fcbb38fe14fe55cfda[m
+Author: rishabhveer <t-rishabhveer@everwell.org>
+Date:   Sun Aug 2 21:59:41 2020 +0530
+
+    moving from js to react
+
+[33mcommit fa7a45bd64f550f24a356062d2965b16a3797e89[m
+Author: Rishabhveer singh <44227973+rishabhkailey@users.noreply.github.com>
+Date:   Sun Jun 28 21:45:11 2020 +0530
+
+    fixed issues
+    
+    changing brightness, contrast of selected image
+    fixed issue with selection after rotation
+
+[33mcommit 01c7012381b3fbf41986e8dfeadf69448668b4dc[m
+Author: Rishabhveer singh <44227973+rishabhkailey@users.noreply.github.com>
+Date:   Sat Jun 27 18:24:54 2020 +0530
+
+    fixed selectRect
+
+[33mcommit 9144151e8a08ee254146e043d2b46eea664ec99b[m
+Author: Rishabhveer singh <44227973+rishabhkailey@users.noreply.github.com>
+Date:   Sun Jun 21 23:50:54 2020 +0530
+
+    Update script.js
+
+[33mcommit 85d3326c579aecd7f8e36bedc661cf66e3adc750[m
+Author: Rishabhveer singh <44227973+rishabhkailey@users.noreply.github.com>
+Date:   Sat Jun 20 18:19:41 2020 +0530
+
+    added selection feature
+
+[33mcommit c632029c6fb64fe88dea6c90112f08350aca3b3d[m
+Author: Rishabhveer singh <44227973+rishabhkailey@users.noreply.github.com>
+Date:   Sat Jun 13 16:19:29 2020 +0530
+
+    Update script.js
+    
+    fixed crop issue
+
+[33mcommit 1997d35396d0f4ce1cdcffcb28bd00b80313d703[m
+Author: Rishabhveer singh <44227973+rishabhkailey@users.noreply.github.com>
+Date:   Sat Jun 6 16:48:02 2020 +0530
+
+    change structure of the code.
+    
+    created different class for crop, imageAdjustment and rotate.
+
+[33mcommit 4682bee7431ccd13d2134dc34281770452135b61[m
+Author: Rishabhveer singh <44227973+rishabhkailey@users.noreply.github.com>
+Date:   Tue Jun 2 00:51:06 2020 +0530
+
+    Update script.js
+
+[33mcommit cdafddb7225a597dccba24ceaccdf7158ab4e342[m
+Author: mankiran kaur <rishabhveersinghkailay@gmail.com>
+Date:   Sun May 31 01:08:46 2020 +0530
+
+    added crop functionality
+
+[33mcommit e93dcde2b0fd414aa5f27d20ecb2f34acd0e3699[m
+Author: mankiran kaur <rishabhveersinghkailay@gmail.com>
+Date:   Sat May 30 00:28:36 2020 +0530
+
+    changed logic for contrast and added rotation feature
+
+[33mcommit ee8acda9d859abf6f0618e3145b495e12b2f8b00[m
+Author: mankiran kaur <rishabhveersinghkailay@gmail.com>
+Date:   Fri May 29 00:11:33 2020 +0530
+
+    changed contrast logic and added saturation control
+
+[33mcommit f60fb283788416ff3acce7048735826b1f6740dc[m
+Author: mankiran kaur <rishabhveersinghkailay@gmail.com>
+Date:   Thu May 28 23:19:02 2020 +0530
+
+    added brightness, contrast control
