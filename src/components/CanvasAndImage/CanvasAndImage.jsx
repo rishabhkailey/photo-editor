@@ -30,7 +30,11 @@ class CanvasAndImage extends Component {
         this.imageFile = null;
 
         // html image element, try not to use this 
-        this.image = new Image();
+        this.imageElement = new Image();
+
+        this.fullResEditedImageElement = new Image();
+
+        this.editedImageElement = new Image();
 
         // contains all funtions required by the features
         this.canvasFunctions = {};
@@ -54,9 +58,15 @@ class CanvasAndImage extends Component {
         return new ImageData(new Uint8ClampedArray(image.data), image.width);
     }
 
+    // call this to save image (this should change 4 objects editedImage + fullResEditedImage and editedImageElement + fullResEditedImageElement )
     setFullResEditedImage = (image)=> {
         console.log("setFullResEditedImage called");
+
         this.fullResEditedImage = new ImageData(new Uint8ClampedArray(image.data), image.width);
+        this.setFullResEditedImageElement(image);
+        
+        // changes scaled edtedImage and editedImageElement
+        this.scaleImageAndSetEditedImage(image);
     }
 
     getEditedImage = ()=> {
@@ -68,13 +78,27 @@ class CanvasAndImage extends Component {
     }
 
     // set new reference because this image reference incoming can be of displayImage 
-    // try not to use this, use setDisplayImageAndSaveEdits // if using this don't forget to call drawImage
+    // try not to use this, use scaleImageAndSetEditedImage // if using this don't forget to call drawImage
     setEditedImage = (image)=> {
         if(!this.state.isImageLoaded)
             return;
 
         this.editedImage = new ImageData(new Uint8ClampedArray(image.data), image.width);
+        this.setEditedImageElement(this.editedImage);
     }
+
+    setEditedImageElement = (image)=> {
+        this.editedImageElement.src = this.imageToImageSrc(image);
+    }
+
+    setFullResEditedImageElement = (image)=> {
+        this.fullResEditedImageElement.src = this.imageToImageSrc(image);
+        console.log(image.width, this.fullResEditedImageElement.width);
+    }
+
+    getFullResEditedImageElement = ()=> this.fullResEditedImageElement;
+
+    getEditedImageElement = ()=> this.editedImageElement;
     
     getDisplayImage = ()=> {
         if(!this.state.isImageLoaded)
@@ -96,25 +120,25 @@ class CanvasAndImage extends Component {
         if(!this.state.isImageLoaded)
             return;
             
-        this.setDisplayImageAndSaveEdits(this.getDisplayImage());
+        this.scaleImageAndSetEditedImage(this.getDisplayImage());
     }
 
-    setDisplayImageAndSaveEdits = (image)=> {
+    scaleImageAndSetEditedImage = (image)=> {
         if(!this.state.isImageLoaded)
             return;
         
         let {width, height} = this.canvasRef.current.getBoundingClientRect();
         if(Math.abs(parseInt(width) - parseInt(image.width)) > 10 || Math.abs(parseInt(height) - parseInt(image.height)) > 10) {
-            console.log("in setDisplayImageAndSaveEdits and scaling the image to canvas size ", {width: image.width, height: image.height}, "to", {width, height});
+            console.log("in scaleImageAndSetEditedImage and scaling the image to canvas size ", {width: image.width, height: image.height}, "to", {width, height});
 
-            // scale image is asynchronous so we cannot return imagedata from it so instead we are calling setDisplayImageAndSaveEdits in it (it is not recurssion this fucntion will complete first)
+            // scale image is asynchronous so we cannot return imagedata from it so instead we are calling scaleImageAndSetEditedImage in it (it is not recurssion this fucntion will complete first)
             this.changeCanvasDimensions({width: image.width, height: image.height})
             // scale the image so if image size is less then canvas size (scale the image) (canvas size is not effected by image, canvas ratio is effected by image)
             image = this.scaleImageToCanvaSize(image);
 
         }
         else {
-            console.log("in setDisplayImageAndSaveEdits and calling setEditedImage and setDisplayImage");
+            console.log("in scaleImageAndSetEditedImage and calling setEditedImage and setDisplayImage");
             this.setEditedImage(image);
             this.setDisplayImage(image);
         }
@@ -147,7 +171,7 @@ class CanvasAndImage extends Component {
 
         imageObject.onload = ()=> {
             imageData = this.imageToImageData(imageObject);
-            this.setDisplayImageAndSaveEdits(imageData);
+            this.scaleImageAndSetEditedImage(imageData);
         }
     }
     /*-------------------SCALING-------------------------------------*/
@@ -199,12 +223,25 @@ class CanvasAndImage extends Component {
         }
 
         let ctx = canvas1.getContext('2d');
-        ctx.drawImage(image, 0, 0, canvas1.width, canvas1.height);
+        ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas1.width, canvas1.height);
         return ctx.getImageData(0, 0, canvas1.width, canvas1.height);
     }
 
+    imageToImageSrc = (image)=> {
+        let {height, width} = image;
+        let canvas1 = document.createElement("canvas");
+
+        canvas1.height = height;
+        canvas1.width = width;
+
+        let ctx = canvas1.getContext('2d');
+        ctx.putImageData(image, 0, 0);
+    
+        return canvas1.toDataURL('image/png');
+    }
+
     fileReaderNewImageHandler = (e)=> {
-        this.image.src = e.target.result;
+        this.imageElement.src = e.target.result;
         // now image.onload event will call displayInputImage
     }
 
@@ -212,12 +249,11 @@ class CanvasAndImage extends Component {
         this.setState({isImageLoaded: true});
         this.props.setGlobalState({isImageLoaded: true});
 
-        this.changeCanvasDimensions({width: this.image.width, height: this.image.height});
+        this.changeCanvasDimensions({width: this.imageElement.width, height: this.imageElement.height});
         
-        let imageData = this.imageToImageData(this.image);
-        let fullResImageData = this.imageToImageData(this.image, true);
+        let imageData = this.imageToImageData(this.imageElement);
+        let fullResImageData = this.imageToImageData(this.imageElement, true);
         this.setFullResEditedImage(fullResImageData);
-        this.setDisplayImageAndSaveEdits(imageData);
     }
 
     imageInput = (e)=> {
@@ -233,9 +269,9 @@ class CanvasAndImage extends Component {
     componentDidMount() {
         this.fileReader = new FileReader();
         this.fileReader.onload = this.fileReaderNewImageHandler
-        this.image.onload = this.displayInputImage;
+        this.imageElement.onload = this.displayInputImage;
         this.ctx = this.canvasRef.current.getContext('2d');
-        this.canvasFunctions = {getDisplayImage: this.getDisplayImage, setDisplayImage: this.setDisplayImage, setDisplayImageAndSaveEdits: this.setDisplayImageAndSaveEdits, getEditedImage: this.getEditedImage, saveEdits: this.saveEdits, getFullResEditedImage: this.getFullResEditedImage, setFullResEditedImage: this.setFullResEditedImage};
+        this.canvasFunctions = {getFullResEditedImageElement: this.getFullResEditedImageElement, getEditedImageElement: this.getEditedImageElement, getDisplayImage: this.getDisplayImage, setDisplayImage: this.setDisplayImage, scaleImageAndSetEditedImage: this.scaleImageAndSetEditedImage, getEditedImage: this.getEditedImage, saveEdits: this.saveEdits, getFullResEditedImage: this.getFullResEditedImage, setFullResEditedImage: this.setFullResEditedImage};
         this.canvasElements = {canvas: this.canvasRef, canvasContainer: this.canvasContainerRef};
         
         this.props.setGlobalState({canvasFunctions: this.canvasFunctions, canvasElements: this.canvasElements})

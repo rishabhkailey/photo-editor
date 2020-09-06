@@ -2,37 +2,10 @@ import React, {Component} from "react";
 
 class Rotate extends Component {
     
-    // calculateAngleInRadian = (x1, y1, x2, y2) => {
-        
-    //     // 
+    state = {
+        value: 0
+    }
 
-    //     let angle = Math.atan((y2-y1)/(x2-x1));
-        
-    //     if(x2 > x1) {
-    //         if(y2 > y1) {
-    //             // console.log("first quad");
-    //             // no change
-    //         }
-    //         else {
-    //             // console.log("4th quad");
-    //             angle = (2*Math.PI) + angle;
-    //         }
-    //     }
-    //     else {
-    //         if(y2 > y1) {
-    //             // console.log("2nd quad");
-    //             angle += Math.PI;
-    //         }
-    //         else {
-    //             // console.log("3rd quad");
-    //             angle += Math.PI;
-    //         }
-    //     }
-    //     return angle;
-    //     // return angle*180 / Math.PI;
-    
-    // }
-    
     calculateAngleInRadian = (x1, y1, x2, y2) => {
         
         // Math.pi will only give ans between 0 - 90 and -90 to 0 (math.abs() = 0 to 90)
@@ -66,6 +39,11 @@ class Rotate extends Component {
     }
 
     inputHandler = (e)=> {
+        this.setState({value: e.target.value});
+        this.rotateImage(e.target.value);
+    }
+
+    rotateImage = (value)=> {
     
         let {canvasFunctions, isImageLoaded} = this.props;
 
@@ -74,70 +52,90 @@ class Rotate extends Component {
     
         let image = canvasFunctions.getEditedImage();
 
-        if(e.target.value === "0" || e.target.value === "360" || e.target.value === "-360") {
+        if(value === "0" || value === "360" || value === "-360") {
             canvasFunctions.setDisplayImage(image);
             return;
         }
 
         let {width, height, data} = image;
         
-        let center = {x: parseInt(width/2), y: parseInt(height/2)};
         let rotatedImage = new ImageData(width, height);
-        let angle_in_radian = (Math.PI/180 * e.target.value);
+        let angle_in_radian = (Math.PI/180 * value);
 
-        // finding the right quadrant
+        let canvas = this.props.canvasElements.canvas.current;
+        let ctx = canvas.getContext("2d");
 
-        let index = 0;
-        let bool = false;
-        // console.log(center);
-        for(let i=0; i<height; i++) {
-            for(let j=0; j<width; j++) {
+        let imageElement = this.props.canvasFunctions.getEditedImageElement();
 
-                // diff = length (line from center to that pixel)
-                let diff = Math.sqrt( Math.pow(i-center.y, 2) + Math.pow(j-center.x , 2) );
-                
-                // current angle 
-                // let angle = Math.atan((i - center.y)/(j - center.x));
-                let angle = this.calculateAngleInRadian(center.x, center.y, j, i);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+		
+		ctx.save(); //save the initial transformation (translation)
+		ctx.translate(canvas.width/2, canvas.height/2); // (move to the center so image rotates from center not from top-left corner)
+		
+		// rotate the canvas
+		ctx.rotate(angle_in_radian);
+		// rotating the context will clear the image so we need to draw image (drawImage is more efficent then putImageData(use put imageData only when working with pixels))
 
-                // if(!bool) {
-                //     console.log(`${i - center.y}/${j - center.x}) = `, angle * 180 / Math.PI);
-                // }
+		// draw image on canvas (image will be drawn on canvas as it is not rotated (its like tranform of the html element but that will not effect the drawing)) (think of it as frame(canvas) and photo(context), it is rotating the context but not canvas)
+		ctx.drawImage(imageElement, -canvas.width/2, -canvas.height/2, canvas.width, canvas.height);
+		
+		// changing the imageData because putImageData used in applyChangesToCanvas(for adjustment) doesnot depends on rotaion of ctx (its an array for whole canvas, we need rotated arry for it to show rotated image), now we are changing the orginalImageData (array) to rotated image array 
+		let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		// above we just rotate the canvas, now get the image data of rotated canvas and save the data
+        
+		// restore's the translate we done to move to center
+		ctx.restore();
 
-                // angle after rotating (final angle)
-                angle += angle_in_radian;
+    }
 
-                // assuming center to be 0, 0 relative value of pixel position after rotating will be diff * cos(angle_in_radian), diff * sin(angle_in_radian)
-                let x = parseInt(diff * Math.cos(angle));
-                let y = parseInt(diff * Math.sin(angle));
-                
-                
-                // position relative to center (not 0, 0)
-                x = center.x - x;
-                y = center.y - y;
+    applyChanges = ()=> {
+        this.props.canvasFunctions.setFullResEditedImage(this.getFullResRotatedImage(this.state.value));
+    }
 
-                
-                // if(!bool)
-                //     console.log(i , j , "to", x, y, angle, angle_in_radian * 180 / Math.PI);
-                   
-                bool = true;
-                
-                if(x >= width || x <= 0 || y >= height || y<= 0){ 
-                    continue;
-                }
+    // used for saving the changes
+    getFullResRotatedImage = (value)=> {
+    
+        let {canvasFunctions, isImageLoaded} = this.props;
 
-                let index = (y*width + x)*4;
-                let index1 = (i*width + j)*4;
-                
-                rotatedImage.data[index++] = data[index1++];
-                rotatedImage.data[index++] = data[index1++];
-                rotatedImage.data[index++] = data[index1++];
-                rotatedImage.data[index++] = data[index1++];
-            }
+        if(!isImageLoaded)
+            return;
+    
+        let image = canvasFunctions.getFullResEditedImage();
+
+        if(value === "0" || value === "360" || value === "-360") {
+            return image;
         }
 
-        // console.log(rotatedImage, index);        
-        canvasFunctions.setDisplayImage(rotatedImage);
+        let angle_in_radian = (Math.PI/180 * value);
+
+        let imageElement = this.props.canvasFunctions.getFullResEditedImageElement();
+
+        let canvas = document.createElement("canvas");
+        canvas.width = imageElement.width;
+        canvas.height = imageElement.height;
+        let ctx = canvas.getContext("2d");
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+		
+		ctx.save(); //save the initial transformation (translation)
+		ctx.translate(canvas.width/2, canvas.height/2); // (move to the center so image rotates from center not from top-left corner)
+		
+		// rotate the canvas
+		ctx.rotate(angle_in_radian);
+		// rotating the context will clear the image so we need to draw image (drawImage is more efficent then putImageData(use put imageData only when working with pixels))
+
+		// draw image on canvas (image will be drawn on canvas as it is not rotated (its like tranform of the html element but that will not effect the drawing)) (think of it as frame(canvas) and photo(context), it is rotating the context but not canvas)
+		ctx.drawImage(imageElement, -canvas.width/2, -canvas.height/2, canvas.width, canvas.height);
+		
+		// changing the imageData because putImageData used in applyChangesToCanvas(for adjustment) doesnot depends on rotaion of ctx (its an array for whole canvas, we need rotated arry for it to show rotated image), now we are changing the orginalImageData (array) to rotated image array 
+		let imageData = ctx.getImageData(0, 0, imageElement.width, imageElement.height);
+		// above we just rotate the canvas, now get the image data of rotated canvas and save the data
+        
+		// restore's the translate we done to move to center
+		ctx.restore();
+
+        return imageData;
+
     }
 
     render() {
@@ -145,8 +143,9 @@ class Rotate extends Component {
           
             <div>Rotate</div>
             <hr />
-            <input style={{width: "100%"}} type="range" defaultValue="0" min="-360" max="360" step="10" onChange={this.inputHandler} />
-
+            <input style={{width: "100%"}} type="range" defaultValue="0" min="-360" max="360" step="1" onChange={this.inputHandler} />
+            <hr />
+            <button onClick={this.applyChanges} className="btn btn-primary">Apply</button>
         </div>
     }
 }
