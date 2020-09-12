@@ -8,6 +8,15 @@ class Select extends Component {
         
     // }
 
+    constructor(props) {
+        super(props);
+        this.state = {
+            selectMode: "+", 
+            isImageLoaded: false
+        }
+        this.selectMapping = null;
+    }
+
     drawShapeFunction = null;
     startPosition = {x: 0, y: 0};
     prevPosition = {x: 0, y: 0};
@@ -73,6 +82,12 @@ class Select extends Component {
         this.prevPosition = position;
     }
 
+    static getDerivedStateFromProps(props) {
+        if(props.isImageLoaded) {
+            return {isImageLoaded: true}
+        }
+        return null;
+    }
 
     startTracking = (e)=> {
         console.log("start tracking");
@@ -97,12 +112,59 @@ class Select extends Component {
         window.onmousemove = null;
     }
 
+    
+    componentDidUpdate() {
+        if(this.selectMapping === null && this.props.isImageLoaded) {
+            let {width, height} = this.props.canvasFunctions.getEditedImage();
+            this.selectMapping = Array(height).fill(Array(width));
+        }
+    }
+    
+    componentDidMount() {
+        if(this.selectMapping === null && this.props.isImageLoaded) {
+            let {width, height} = this.props.canvasFunctions.getEditedImage();
+            this.selectMapping = Array(height).fill(Array(width));
+        }
+    }
+
     render() {
+        let {selectMode, isImageLoaded} = this.state;
+        console.log(isImageLoaded);
         return <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+
+            {!isImageLoaded && <div className="alert alert-danger">
+                Select image First to start editing
+            </div>}
+
             <h4>Select</h4>
             <hr />
 
-            <button className="btn btn-primary" onClick={this.rectangleSelection}>Rectangle</button> 
+            <div>
+                <h5>select mode</h5>
+                <div style={{display: "flex", flexDirection: "row", justifyContent: "space-around"}} >
+                    <button 
+                        className={selectMode === "+" ? "btn btn-success": "btn btn-warning"}
+                        onClick={() => {this.setState({selectMode: "+"})}}>
+                        
+                        <h5>+</h5>
+                    
+                    </button>
+
+                    <button 
+                        className={selectMode === "-" ? "btn btn-success": "btn btn-warning"}
+                        onClick={() => {this.setState({selectMode: "-"})}}>
+                        
+                        <h4>-</h4>
+
+                    </button>
+                </div>
+            </div>
+            <hr />
+
+            <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+                <h5>select shape</h5>
+                <button className="btn btn-primary" onClick={this.rectangleSelection}>Rectangle</button> 
+            </div>
 
         </div>
     }

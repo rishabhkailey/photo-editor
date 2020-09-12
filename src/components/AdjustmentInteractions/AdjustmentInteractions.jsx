@@ -108,7 +108,6 @@ class AdjustmentInteractions extends Component {
 
     saveChanges = ()=> {
         this.applyChangesToFullResImage();
-        this.props.canvasFunctions.saveEdits();
         history.push("/");
     }
 
