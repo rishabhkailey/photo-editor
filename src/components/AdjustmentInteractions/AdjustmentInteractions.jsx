@@ -1,4 +1,6 @@
 import React, {Component} from "react";
+import { connect } from "react-redux";
+
 import history from "./../../history.js";
 
 class AdjustmentInteractions extends Component {
@@ -13,18 +15,6 @@ class AdjustmentInteractions extends Component {
             saturation: 0,
             extra: 0 // useless
         }
-
-        this.state = {
-            isImageLoaded: false
-        }
-    }
-
-    static getDerivedStateFromProps(props, state) {
-
-        if(props.isImageLoaded !== null)
-            return {isImageLoaded: props.isImageLoaded}
-        
-            return null
     }
 
 	changeBrightNess(data, i) {
@@ -99,7 +89,7 @@ class AdjustmentInteractions extends Component {
     }
 
     onChange = (e)=> {
-        if(!this.state.isImageLoaded)
+        if(!this.props.isImageLoaded)
             return
 
         this.changes[e.target.name] = parseInt(e.target.value)|0;
@@ -112,7 +102,7 @@ class AdjustmentInteractions extends Component {
     }
 
     render() {
-
+        console.log(this.props);
         return <div className="flex-column justify-content-start align-items-center">
         <div className="flex-column">
             <div className="text-center">
@@ -159,4 +149,10 @@ class AdjustmentInteractions extends Component {
     }
 }
 
-export default AdjustmentInteractions;
+const mapStateToProps = state => {
+    console.log(state);
+    return {...state};
+}
+
+
+export default connect(mapStateToProps)(AdjustmentInteractions);
