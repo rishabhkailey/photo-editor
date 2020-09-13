@@ -1,5 +1,6 @@
-import React, {Component} from "react";
-import {Router, Switch, Route} from "react-router-dom";
+import React, { Component } from "react";
+import { Router, Switch, Route } from "react-router-dom";
+import { connect } from "react-redux";
 import history from './../../history.js';
 
 import AdjustmentInteractoins from "./../AdjustmentInteractions/AdjustmentInteractions.jsx";
@@ -13,15 +14,22 @@ class FeaturesInteractions extends Component {
         return <div>
             <Router history={history}>
                 <Switch>
-                    <Route exact={true} path="/" render={()=> <div></div>}/>
-                    <Route path="/adjustments" render={()=> <AdjustmentInteractoins {...globalState} />}/>
-                    <Route path="/crop" render={()=> <Crop {...globalState} /> }/>
-                    <Route path="/select" render={()=> <Select {...globalState} />} />
-                    <Route path="/rotate" render={()=> <Rotate {...globalState} /> }/>
+                    <Route exact={true} path="/" render={() => <div></div>} />
+                    <Route path="/adjustments" render={() => <AdjustmentInteractoins />} />
+                    <Route path="/crop" render={() => <Crop />} />
+                    <Route path="/select" render={() => <Select />} />
+                    <Route path="/rotate" render={() => <Rotate />} />
                 </Switch>
             </Router>
         </div>
     }
 }
 
-export default FeaturesInteractions;
+
+const mapStateToProps = state => {
+    console.log(state);
+    return { ...state };
+}
+
+
+export default connect(mapStateToProps)(FeaturesInteractions);

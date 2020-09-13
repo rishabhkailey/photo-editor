@@ -1,5 +1,6 @@
 import React, {Component} from "react";
 import history from "./../../history.js";
+import { connect } from "react-redux";
 
 class Crop extends Component {
 
@@ -264,4 +265,10 @@ class Crop extends Component {
     }
 }
 
-export default Crop;
+const mapStateToProps = state => {
+    console.log(state);
+    return {...state};
+}
+
+
+export default connect(mapStateToProps)(Crop);
