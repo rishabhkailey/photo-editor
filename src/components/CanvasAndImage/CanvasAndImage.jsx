@@ -70,6 +70,8 @@ class CanvasAndImage extends Component {
     }
 
     getEditedImage = ()=> {
+        console.debug(`get edited image called, isImageLoaded = ${this.state.isImageLoaded}`)
+
         if(!this.state.isImageLoaded)
             return;
 
@@ -80,10 +82,8 @@ class CanvasAndImage extends Component {
     // set new reference because this image reference incoming can be of displayImage 
     // try not to use this, use scaleImageAndSetEditedImage // if using this don't forget to call drawImage
     setEditedImage = (image)=> {
-        if(!this.state.isImageLoaded)
-            return;
-
         this.editedImage = new ImageData(new Uint8ClampedArray(image.data), image.width);
+        this.setDisplayImage(image);
         this.setEditedImageElement(this.editedImage);
     }
 
@@ -93,7 +93,6 @@ class CanvasAndImage extends Component {
 
     setFullResEditedImageElement = (image)=> {
         this.fullResEditedImageElement.src = this.imageToImageSrc(image);
-        console.log(image.width, this.fullResEditedImageElement.width);
     }
 
     getFullResEditedImageElement = ()=> this.fullResEditedImageElement;
@@ -109,23 +108,11 @@ class CanvasAndImage extends Component {
 
     // requires new reference
     setDisplayImage = (image)=> {
-        if(!this.state.isImageLoaded)
-            return;
-           
         this.displayImage = image;
         this.drawImage();
     }
 
-    saveEdits = ()=> {
-        if(!this.state.isImageLoaded)
-            return;
-            
-        this.scaleImageAndSetEditedImage(this.getDisplayImage());
-    }
-
     scaleImageAndSetEditedImage = (image)=> {
-        if(!this.state.isImageLoaded)
-            return;
         
         let {width, height} = this.canvasRef.current.getBoundingClientRect();
         if(Math.abs(parseInt(width) - parseInt(image.width)) > 10 || Math.abs(parseInt(height) - parseInt(image.height)) > 10) {
@@ -134,25 +121,25 @@ class CanvasAndImage extends Component {
             // scale image is asynchronous so we cannot return imagedata from it so instead we are calling scaleImageAndSetEditedImage in it (it is not recurssion this fucntion will complete first)
             this.changeCanvasDimensions({width: image.width, height: image.height})
             // scale the image so if image size is less then canvas size (scale the image) (canvas size is not effected by image, canvas ratio is effected by image)
-            image = this.scaleImageToCanvaSize(image);
+            this.scaleImageToCanvaSize(image);
 
         }
         else {
             console.log("in scaleImageAndSetEditedImage and calling setEditedImage and setDisplayImage");
             this.setEditedImage(image);
-            this.setDisplayImage(image);
+            this.setImageLoaded();
         }
         
     }
 
-    initializeDisplayImage = ()=> {
-        if(!this.state.isImageLoaded)
-            return;
+    // initializeDisplayImage = ()=> {
+    //     if(!this.state.isImageLoaded)
+    //         return;
             
-        let image = this.editedImage;
-        this.displayImage =  new ImageData(new Uint8ClampedArray(image.data), image.width);
-        this.drawImage();
-    }
+    //     let image = this.editedImage;
+    //     this.displayImage =  new ImageData(new Uint8ClampedArray(image.data), image.width);
+    //     this.drawImage();
+    // }
     /*------------------------images-------------------------------*/
 
     /*-------------------SCALING-------------------------------------*/
@@ -246,14 +233,16 @@ class CanvasAndImage extends Component {
     }
 
     displayInputImage = (e)=> {
-        this.setState({isImageLoaded: true});
-        this.props.setGlobalState({isImageLoaded: true});
-
         this.changeCanvasDimensions({width: this.imageElement.width, height: this.imageElement.height});
         
-        let imageData = this.imageToImageData(this.imageElement);
+        // let imageData = this.imageToImageData(this.imageElement);
         let fullResImageData = this.imageToImageData(this.imageElement, true);
         this.setFullResEditedImage(fullResImageData);
+    }
+
+    setImageLoaded = ()=> {
+        this.setState({isImageLoaded: true});
+        this.props.setGlobalState({isImageLoaded: true});
     }
 
     imageInput = (e)=> {
