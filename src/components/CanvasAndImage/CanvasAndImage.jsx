@@ -2,6 +2,11 @@ import React, { Component } from 'react';
 import { connect } from "react-redux";
 import { setImageLoaded, setCanvasFunctions, setCanvasElements } from "./../../redux/actions.js";
 
+import Tooltip from '@material-ui/core/Tooltip';
+import NotInterestedIcon from "@material-ui/icons/NotInterested";
+import IconButton from '@material-ui/core/IconButton';
+import SelectAllIcon from '@material-ui/icons/SelectAll';
+
 // input image file -> image data url(by image reader) -> image (new Image(data url)) -> imageData (by image -> canvas -> imageData)
 // originalImage, displayImage, editedImage represent image data(array and width) not image html element
 
@@ -110,8 +115,13 @@ class CanvasAndImage extends Component {
 
     // requires new reference
     setDisplayImage = (image) => {
+        console.log(image);
         this.displayImage = image;
         this.drawImage();
+    }
+
+    resetDisplayImage = () => {
+        this.setDisplayImage(this.getEditedImage());
     }
 
     scaleImageAndSetEditedImage = (image) => {
@@ -263,7 +273,7 @@ class CanvasAndImage extends Component {
         this.fileReader.onload = this.fileReaderNewImageHandler
         this.imageElement.onload = this.displayInputImage;
         this.ctx = this.canvasRef.current.getContext('2d');
-        this.canvasFunctions = { getFullResEditedImageElement: this.getFullResEditedImageElement, getEditedImageElement: this.getEditedImageElement, getDisplayImage: this.getDisplayImage, setDisplayImage: this.setDisplayImage, scaleImageAndSetEditedImage: this.scaleImageAndSetEditedImage, getEditedImage: this.getEditedImage, saveEdits: this.saveEdits, getFullResEditedImage: this.getFullResEditedImage, setFullResEditedImage: this.setFullResEditedImage };
+        this.canvasFunctions = { resetDisplayImage: this.resetDisplayImage, getFullResEditedImageElement: this.getFullResEditedImageElement, getEditedImageElement: this.getEditedImageElement, getDisplayImage: this.getDisplayImage, setDisplayImage: this.setDisplayImage, scaleImageAndSetEditedImage: this.scaleImageAndSetEditedImage, getEditedImage: this.getEditedImage, saveEdits: this.saveEdits, getFullResEditedImage: this.getFullResEditedImage, setFullResEditedImage: this.setFullResEditedImage };
         this.canvasElements = { canvas: this.canvasRef, canvasContainer: this.canvasContainerRef };
 
         // this.props.setGlobalState({ canvasFunctions: this.canvasFunctions, canvasElements: this.canvasElements })
@@ -274,9 +284,27 @@ class CanvasAndImage extends Component {
     /*-------------------------IMAGE INPUT ----------------*/
 
     render() {
+        // console.log(this.props.selectionInfo);
+        let { selectionEnabled } = this.props.selectionInfo;
+        let selection = null;
+
+        if (selectionEnabled) {
+            selection = <div className="">
+            <Tooltip title="disable selection mode">
+                <div className="border rounded">
+                    <IconButton aria-label="" color="secondary" size="small">
+                        <SelectAllIcon color="secondary" />
+                    </IconButton>
+                </div>
+            </Tooltip>
+        </div>;
+        }
         return <div className="d-flex flex-column align-items-stretch h-100">
-            <div className="d-flex flex-column align-items-center">
-                <input className="border" type='file' accept="images" onChange={this.imageInput} />
+            <div className="d-flex flex-row justify-content-around">
+                <div className="d-flex flex-row flex-grow-1 justify-content-center">
+                    <input className="border" type='file' accept="images" onChange={this.imageInput} />
+                </div>
+                {selection}
             </div>
             <div className="flex-grow-1 d-flex flex-row justify-content-center align-items-center" ref={this.canvasAvailableSpaceRef}>
                 <div style={{ height: "100%", width: "100%", position: "relative" }} ref={this.canvasContainerRef}>
@@ -290,6 +318,11 @@ class CanvasAndImage extends Component {
     }
 }
 
+const mapStateToProps = state => ({
+    selectionInfo: state.selectionInfo
+})
+
+
 export default connect(
-    null,
-    { setImageLoaded, setCanvasElements, setCanvasFunctions } )(CanvasAndImage);
+    mapStateToProps,
+    { setImageLoaded, setCanvasElements, setCanvasFunctions })(CanvasAndImage);

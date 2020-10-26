@@ -50,22 +50,26 @@ class Rotate extends Component {
         if (!isImageLoaded)
             return;
 
-        let image = canvasFunctions.getEditedImage();
-
+        // let { width, height, data } = image;
+        console.log(value);
         if (value === "0" || value === "360" || value === "-360") {
+            console.log("inside if");
+            let image = canvasFunctions.getEditedImage();
             canvasFunctions.setDisplayImage(image);
             return;
         }
 
-        let { width, height, data } = image;
 
-        let rotatedImage = new ImageData(width, height);
+        // let rotatedImage = new ImageData(width, height);
         let angle_in_radian = (Math.PI / 180 * value);
 
         let canvas = this.props.canvasElements.canvas.current;
         let ctx = canvas.getContext("2d");
 
         let imageElement = this.props.canvasFunctions.getEditedImageElement();
+
+        let width = imageElement.width;
+        let height = imageElement.height;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -138,8 +142,36 @@ class Rotate extends Component {
 
     }
 
+    componentDidMount() {
+        if (this.props.isImageLoaded && this.props.selectionInfo.selectionEnabled) {
+            this.props.canvasFunctions.resetDisplayImage();
+        }
+    }
+
+    componentDidUpdate() {
+
+        // if (this.props.isImageLoaded && this.props.selectionInfo.selectionEnabled) {
+        //     this.props.canvasFunctions.resetDisplayImage();
+        // }
+
+    }
+
+    componentWillUnmount() {
+        this.props.canvasFunctions.resetDisplayImage();
+    }
+
     render() {
+        let { isImageLoaded, selectionInfo } = this.props;
+        console.log(isImageLoaded)
         return <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+
+            {!isImageLoaded && <div className="alert alert-danger">
+                Select image First to start editing
+            </div>}
+
+            {selectionInfo.selectionEnabled && <div className="alert alert-danger">
+                this feature does not support editing with selection
+            </div>}
 
             <div>Rotate</div>
             <hr />
@@ -153,7 +185,7 @@ class Rotate extends Component {
 
 const mapStateToProps = state => {
     console.log(state);
-    return {...state};
+    return { ...state };
 }
 
 

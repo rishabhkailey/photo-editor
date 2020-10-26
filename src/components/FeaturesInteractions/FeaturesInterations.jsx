@@ -10,7 +10,6 @@ import Select from "./../Select/Select.jsx";
 
 class FeaturesInteractions extends Component {
     render() {
-        let globalState = this.props;
         return <div>
             <Router history={history}>
                 <Switch>
@@ -27,7 +26,6 @@ class FeaturesInteractions extends Component {
 
 
 const mapStateToProps = state => {
-    console.log(state);
     return { ...state };
 }
 

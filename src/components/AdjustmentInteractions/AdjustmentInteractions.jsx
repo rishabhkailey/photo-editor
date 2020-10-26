@@ -102,8 +102,13 @@ class AdjustmentInteractions extends Component {
     }
 
     render() {
-        console.log(this.props);
+        
+        let { isImageLoaded } = this.props;
+
         return <div className="flex-column justify-content-start align-items-center">
+        {!isImageLoaded && <div className="alert alert-danger">
+            Select image First to start editing
+        </div>}
         <div className="flex-column">
             <div className="text-center">
                 Brightness
