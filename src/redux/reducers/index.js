@@ -3,7 +3,7 @@ import { setSelectionInfo } from "../actions.js";
 // you can have multiple reducer function and combine them but here we will only have one reducer function as of now
 // reducer function returns the state according to the action type
 
-import { SET_IMAGE_LOADED, SET_CANVAS_FUNCTIONS, SET_CANVAS_ELEMENTS, SET_SELECTION_INFO } from "./../actionTypes.js";
+import { SET_IMAGE_LOADED, SET_CANVAS_FUNCTIONS, SET_CANVAS_ELEMENTS, SET_SELECTION_INFO, SHOW_DISABLE_SELECTION_TOOLTIP } from "./../actionTypes.js";
 
 const initialState = {
     isImageLoaded: false,
@@ -49,8 +49,16 @@ export default (state = initialState, action) => {
                     ...state,
                     selectionInfo: {
                         selectionEnabled: action.payload.selectionEnabled,
-                        selectionMapping: action.payload.selectionMapping
+                        selectionMapping: action.payload.selectionMapping,
+                        fullResSelectionMapping: action.payload.fullResSelectionMapping
                     }
+                }
+            }
+        case SHOW_DISABLE_SELECTION_TOOLTIP:
+            {
+                return {
+                    ...state,
+                    showDisableSelectionTooltip: action.payload.value
                 }
             }
         default:

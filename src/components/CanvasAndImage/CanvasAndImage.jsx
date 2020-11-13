@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from "react-redux";
-import { setImageLoaded, setCanvasFunctions, setCanvasElements } from "./../../redux/actions.js";
+import { setImageLoaded, setCanvasFunctions, setCanvasElements, setShowDisableSelectionTooltip, setSelectionInfo } from "./../../redux/actions.js";
 
 import Tooltip from '@material-ui/core/Tooltip';
 import NotInterestedIcon from "@material-ui/icons/NotInterested";
@@ -19,6 +19,7 @@ class CanvasAndImage extends Component {
         this.canvasRef = React.createRef();
         this.canvasContainerRef = React.createRef();
         this.canvasAvailableSpaceRef = React.createRef();
+        this.disableSelectionTooltipRef = React.createRef();
         this.ctx = null;
 
         // just for backup original image file without any changes
@@ -123,7 +124,8 @@ class CanvasAndImage extends Component {
     resetDisplayImage = () => {
         if (!this.state.isImageLoaded)
             return;
-            
+
+        console.log("reset image");
         this.setDisplayImage(this.getEditedImage());
     }
 
@@ -282,9 +284,26 @@ class CanvasAndImage extends Component {
         // this.props.setGlobalState({ canvasFunctions: this.canvasFunctions, canvasElements: this.canvasElements })
         this.props.setCanvasElements(this.canvasElements);
         this.props.setCanvasFunctions(this.canvasFunctions);
+
+        this.props.setShowDisableSelectionTooltip(false)
+
+        if (this.disableSelectionTooltipRef.current)
+            this.disableSelectionTooltipRef.current.focus();
     }
 
+    componentDidUpdate() {
+        console.log("here ................................................................................................");
+        console.log(this.props.showDisableSelectionTooltip);
+        if (this.props.showDisableSelectionTooltip === true) {
+            setTimeout((() => { this.props.setShowDisableSelectionTooltip(false) }).bind(this), 2000);
+        }
+    }
     /*-------------------------IMAGE INPUT ----------------*/
+
+    disableSelection = () => {
+        this.resetDisplayImage();
+        this.props.setSelectionInfo({ selectionEnabled: false, selectMapping: null })
+    }
 
     render() {
         // console.log(this.props.selectionInfo);
@@ -293,14 +312,14 @@ class CanvasAndImage extends Component {
 
         if (selectionEnabled) {
             selection = <div className="">
-            <Tooltip title="disable selection mode">
-                <div className="border rounded">
-                    <IconButton aria-label="" color="secondary" size="small">
-                        <SelectAllIcon color="secondary" />
-                    </IconButton>
-                </div>
-            </Tooltip>
-        </div>;
+                <Tooltip title="disable selection mode" open={this.props.showDisableSelectionTooltip}>
+                    <div className="border rounded" >
+                        <IconButton aria-label="" color="secondary" size="small" onClick={this.disableSelection}>
+                            <SelectAllIcon color="secondary" />
+                        </IconButton>
+                    </div>
+                </Tooltip>
+            </div>;
         }
         return <div className="d-flex flex-column align-items-stretch h-100">
             <div className="d-flex flex-row justify-content-around">
@@ -322,10 +341,11 @@ class CanvasAndImage extends Component {
 }
 
 const mapStateToProps = state => ({
-    selectionInfo: state.selectionInfo
+    selectionInfo: state.selectionInfo,
+    showDisableSelectionTooltip: state.showDisableSelectionTooltip
 })
 
 
 export default connect(
     mapStateToProps,
-    { setImageLoaded, setCanvasElements, setCanvasFunctions })(CanvasAndImage);
+    { setImageLoaded, setCanvasElements, setCanvasFunctions, setShowDisableSelectionTooltip, setSelectionInfo })(CanvasAndImage);

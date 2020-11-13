@@ -10,7 +10,8 @@ class Select extends Component {
             selectMode: "+",
             isImageLoaded: false
         }
-        this.selectMapping = null;
+        this.selectionEnabled = false; // if anything selected yet
+        this.selectionMapping = null;
         this.lastShape = null;
     }
 
@@ -70,12 +71,12 @@ class Select extends Component {
 
         // console.log(smallX, smallY, largeX, largeY);
 
-        // console.log(this.selectMapping.length, this.selectMapping[0].length);
+        // console.log(this.selectionMapping.length, this.selectionMapping[0].length);
 
         // console.log(this.state.selectMode === "+");
 
-        for (let i = 0; i < this.selectMapping.length; i++) {
-            for (let j = 0; j < this.selectMapping[i].length; j++) {
+        for (let i = 0; i < this.selectionMapping.length; i++) {
+            for (let j = 0; j < this.selectionMapping[i].length; j++) {
 
                 let isInside = false;
                 if (i >= smallY && i <= largeY && j > smallX && j <= largeX) {
@@ -86,7 +87,7 @@ class Select extends Component {
                     data[(i * image.width + j) * 4 + 3] = this.state.selectMode === "+" ? 255 : 127;
                 }
                 else {
-                    data[(i * image.width + j) * 4 + 3] = this.selectMapping[i][j] ? 255 : 127;
+                    data[(i * image.width + j) * 4 + 3] = this.selectionMapping[i][j] ? 255 : 127;
                 }
             }
         }
@@ -96,22 +97,23 @@ class Select extends Component {
         this.prevPosition = position;
     }
 
-    updateSelectMapping = () => {
+    updateselectionMapping = () => {
         if (!this.props.isImageLoaded)
             return;
 
         if (this.lastShape && this.lastShape.shape === "rectangle") {
             console.log("updating select mapping rectangle")
             let { smallX, smallY, largeX, largeY } = this.lastShape.coordinates;
-            
+
             for (let i = smallX; i < largeX; i++) {
                 for (let j = smallY; j < largeY; j++) {
-                    this.selectMapping[j][i] = this.state.selectMode === "+";
+                    this.selectionMapping[j][i] = this.state.selectMode === "+";
                 }
             }
-            
+
         }
-        this.props.setSelectionInfo({ selectionEnabled: true, selectMapping: this.selectMapping })
+        this.selectionEnabled = true;
+        this.props.setSelectionInfo({ selectionEnabled: true, selectionMapping: this.selectionMapping, fullResSelectionMapping: null })
     }
 
     static getDerivedStateFromProps(props) {
@@ -140,28 +142,37 @@ class Select extends Component {
     }
 
     disableTracking = () => {
-        this.updateSelectMapping();
+        this.updateselectionMapping();
         console.log("disabled tracking");
         window.onmousemove = null;
     }
 
+    resetselectionMapping = () => {
+        this.selectionEnabled = false;
+        let { width, height } = this.props.canvasFunctions.getEditedImage();
+        this.selectionMapping = this.generateArray(height, width);
+    }
 
     componentDidUpdate() {
-        if (this.selectMapping === null && this.props.isImageLoaded) {
-            let { width, height } = this.props.canvasFunctions.getEditedImage();
-            this.selectMapping = this.generateArray(height, width);
-            
+        if (this.selectionMapping === null && this.props.isImageLoaded) {
+            this.resetselectionMapping();
+
             // default selectiong mode
             this.rectangleSelection();
+        }
+        console.log(this.selectionEnabled, this.props.selectionInfo.selectionEnabled);
+        if (this.props.selectionInfo.selectionEnabled === false && this.selectionEnabled === true) {
+            console.log("condition met");
+            this.resetselectionMapping();
         }
     }
 
     componentDidMount() {
-        if (this.selectMapping === null && this.props.isImageLoaded) {
+        if (this.selectionMapping === null && this.props.isImageLoaded) {
             let { width, height } = this.props.canvasFunctions.getEditedImage();
-            this.selectMapping = this.generateArray(height, width);
+            this.selectionMapping = this.generateArray(height, width);
 
-                        
+
             // default selectiong mode
             this.rectangleSelection();
         }
@@ -179,6 +190,33 @@ class Select extends Component {
         return arr;
     }
 
+    generateFullResSelectionMapping = () => {
+        let { width, height } = this.props.canvasFunctions.getFullResEditedImage();
+        let { width: width2, height: height2 } = this.props.canvasFunctions.getEditedImage();
+
+        let fullResSelectionMapping = this.generateArray(height, width);
+
+        let xScale = width2 / width;
+        let yScale = height2 / height;
+
+        for (let i = 0; i < fullResSelectionMapping.length; i++) {
+            for (let j = 0; j < fullResSelectionMapping[i].length; j++) {
+
+                let i2 = parseInt(i * xScale);
+                let j2 = parseInt(j * yScale);
+
+                if (i2 > this.selectionMapping.length)
+                    i2 = this.selectionMapping.length;
+
+                if (j2 > this.selectionMapping[i2].length)
+                    j2 = this.selectionMapping[i2].length
+
+                fullResSelectionMapping[i][j] = this.selectionMapping[i2][j2]
+            }
+        }
+        return fullResSelectionMapping
+    }
+
     componentWillUnmount() {
         let { canvasFunctions, canvasElements } = this.props;
         console.log(this.props, canvasElements);
@@ -187,6 +225,8 @@ class Select extends Component {
         window.onmousemove = null;
         window.onmouseup = null;
         window.onblur = null;
+
+        this.props.setSelectionInfo({ selectionEnabled: true, selectionMapping: this.selectionMapping, fullResSelectionMapping: this.generateFullResSelectionMapping() })
     }
 
     render() {
