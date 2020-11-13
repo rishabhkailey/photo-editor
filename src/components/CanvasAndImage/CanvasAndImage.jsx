@@ -121,6 +121,9 @@ class CanvasAndImage extends Component {
     }
 
     resetDisplayImage = () => {
+        if (!this.state.isImageLoaded)
+            return;
+            
         this.setDisplayImage(this.getEditedImage());
     }
 
