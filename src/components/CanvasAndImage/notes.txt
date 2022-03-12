@@ -1,0 +1,44 @@
+?? check if it is better than current approach
+in crop we can use dirtyX and dirtyY arguments in putImageData
+
+
+do we need to work with downscaled image?
+check performance with full res image intead and all the logic of downscale can be moved from ImageHelper.editedImageData to CanvasHelper.drawImageFromImageData
+
+
+we need  to pass
+(canvasHelper, ?? optional as it is present in imageHelper as well ) ImageHelper and isImageLoaded to all the components
+app is the parent component
+
+
+maybe move isImageloaded to redux instead of global state
+
+
+current problem in scaling
+canvas size is not changing i think
+
+imageHelper in image data same ref and we should not be able to edit the data directly by reference, either return new iamgedata every time
+
+
+if (!props.isImageLoaded || props.globalState.imageHelper == undefined) {
+            // TODO - display message to user
+            console.debug("either Image is not loaded or imageHelper is not intialized yet")
+            return;
+        }
+these condition should be in imagehelper??
+
+
+make crop div relative to canvas
+
+
+Adjustment
+* temprature
+* opacity
+* highlights
+* shadows
+
+
+TODO -
+* remove all <any>
+
+wrapper object for updating imagedata

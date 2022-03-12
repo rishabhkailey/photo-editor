@@ -1,0 +1,475 @@
+yarn run v1.22.4
+$ react-scripts start
+The following changes are being made to your tsconfig.json file:
+  - compilerOptions.noFallthroughCasesInSwitch to be suggested value: true (this can be changed)
+  - compilerOptions.jsx must be react-jsx (to support the new JSX transform in 
+React 17)
+
+i ｢wds｣: Project is running at http://192.168.1.2/
+i ｢wds｣: webpack output is served from
+i ｢wds｣: Content not from webpack is served from C:\Users\rs\Desktop\git\photo-editor\public
+i ｢wds｣: 404s will fallback to /
+Starting the development server...
+
+=============
+
+WARNING: You are currently running a version of TypeScript which is not officially supported by @typescript-eslint/typescript-estree.
+
+You may find that it works just fine, or you may not.
+
+SUPPORTED TYPESCRIPT VERSIONS: >=3.3.1 <4.5.0
+
+YOUR TYPESCRIPT VERSION: 4.5.4
+
+Please only submit bug reports when using the officially supported version.    
+
+=============
+Compiled with warnings.
+
+src\components\AdjustmentInteractions\AdjustmentInteractions.tsx
+  Line 26:11:  React Hook React.useEffect has missing dependencies: 'displayChanges' and 'props.isImageLoaded'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\CanvasAndImage\CanvasAndImage.jsx
+  Line 6:8:     'NotInterestedIcon' is defined but never used            no-unused-vars
+  Line 302:85:  The function binding is unnecessary                      no-extra-bind
+  Line 315:15:  'canvasRef' is assigned a value but never used           no-unused-vars
+  Line 315:26:  'canvasContainerRef' is assigned a value but never used  no-unused-vars
+
+src\components\Crop\Crop.tsx
+  Line 1:17:    'Component' is defined but never used
+
+ @typescript-eslint/no-unused-vars
+  Line 31:12:   'supportSelection' is assigned a value but never used
+
+ @typescript-eslint/no-unused-vars
+  Line 31:30:   'setSupportSelection' is assigned a value but never used       
+
+ @typescript-eslint/no-unused-vars
+  Line 37:8:    React Hook React.useEffect has missing dependencies: 'cropEnabled' and 'needToEnableCrop'. Either include them or remove the dependency array 
+ react-hooks/exhaustive-deps
+  Line 237:17:  'width' is assigned to itself
+
+ no-self-assign
+  Line 238:18:  'height' is assigned to itself
+
+ no-self-assign
+
+src\components\FeatureButtons\FeatureButtons.tsx
+  Line 1:17:  'Component' is defined but never used  @typescript-eslint/no-unused-vars
+
+src\components\FeaturesInteractions\FeaturesInterations.tsx
+  Line 1:17:  'Component' is defined but never used  @typescript-eslint/no-unused-vars
+
+src\components\Rotate\Rotate.tsx
+  Line 1:17:   'Component' is defined but never used
+
+                                                       @typescript-eslint/no-unused-vars
+  Line 16:14:  'calculateAngleInRadian' is defined but never used
+
+                                                       @typescript-eslint/no-unused-vars
+  Line 30:25:  'angle' is assigned to itself
+
+                                                       no-self-assign
+  Line 78:13:  'width' is assigned a value but never used
+
+                                                       @typescript-eslint/no-unused-vars
+  Line 79:13:  'height' is assigned a value but never used
+
+                                                       @typescript-eslint/no-unused-vars
+  Line 94:13:  'imageData' is assigned a value but never used
+
+                                                       @typescript-eslint/no-unused-vars
+  Line 170:8:  React Hook React.useEffect has missing dependencies: 'props.canvasFunctions', 'props.isImageLoaded', and 'props.selectionInfo?.selectionEnabled'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 174:8:  React Hook React.useEffect has a missing dependency: 'props.canvasFunctions'. Either include it or remove the dependency array
+                                                       react-hooks/exhaustive-deps
+
+src\components\Select\Select.tsx
+  Line 1:10:    'Check' is defined but never used
+
+
+
+   @typescript-eslint/no-unused-vars
+  Line 2:17:    'Component' is defined but never used
+
+
+
+   @typescript-eslint/no-unused-vars
+  Line 7:10:    'showSelection' is defined but never used
+
+
+
+   @typescript-eslint/no-unused-vars
+  Line 199:13:  'startPosition' is assigned a value but never used
+
+
+
+   @typescript-eslint/no-unused-vars
+  Line 355:19:  Expected '!==' and instead saw '!='
+
+
+
+   eqeqeq
+  Line 355:31:  Expected '!==' and instead saw '!='
+
+
+
+   eqeqeq
+  Line 432:13:  'count' is assigned a value but never used
+
+
+
+   @typescript-eslint/no-unused-vars
+  Line 435:17:  'checkNearByPixels' is defined but never used
+
+
+
+   @typescript-eslint/no-unused-vars
+  Line 473:27:  Assignments to the 'editedImage' variable from inside React Hook React.useEffect will be lost after each render. To preserve the value over time, store it in a useRef Hook and keep the mutable value in the '.current' property. Otherwise, you can move this variable directly inside React.useEffect    
+   react-hooks/exhaustive-deps
+  Line 510:23:  Assignments to the 'editedImage' variable from inside React Hook React.useEffect will be lost after each render. To preserve the value over time, store it in a useRef Hook and keep the mutable value in the '.current' property. Otherwise, you can move this variable directly inside React.useEffect    
+   react-hooks/exhaustive-deps
+  Line 514:32:  Assignments to the 'selectionMapping' variable from inside React Hook React.useEffect will be lost after each render. To preserve the value over time, store it in a useRef Hook and keep the mutable value in the '.current' property. Otherwise, you can move this variable directly inside React.useEffect  react-hooks/exhaustive-deps
+  Line 548:14:  'generateFullResSelectionMapping' is defined but never used    
+
+
+
+   @typescript-eslint/no-unused-vars
+
+src\redux\reducers\index.ts
+  Line 1:10:  'setSelectionInfo' is defined but never used
+       @typescript-eslint/no-unused-vars
+  Line 25:1:  Assign arrow function to a variable before exporting as module default  import/no-anonymous-default-export
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+Compiling...
+Compiled with warnings.
+
+src\components\AdjustmentInteractions\AdjustmentInteractions.tsx
+  Line 26:11:  React Hook React.useEffect has missing dependencies: 'displayChanges' and 'props.isImageLoaded'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\CanvasAndImage\CanvasAndImage.jsx
+  Line 6:8:     'NotInterestedIcon' is defined but never used            no-unused-vars
+  Line 302:85:  The function binding is unnecessary                      no-extra-bind
+  Line 315:15:  'canvasRef' is assigned a value but never used           no-unused-vars
+  Line 315:26:  'canvasContainerRef' is assigned a value but never used  no-unused-vars
+
+src\components\Crop\Crop.tsx
+  Line 1:17:    'Component' is defined but never used
+
+ @typescript-eslint/no-unused-vars
+  Line 31:12:   'supportSelection' is assigned a value but never used
+
+ @typescript-eslint/no-unused-vars
+  Line 31:30:   'setSupportSelection' is assigned a value but never used       
+
+ @typescript-eslint/no-unused-vars
+  Line 37:8:    React Hook React.useEffect has missing dependencies: 'cropEnabled' and 'needToEnableCrop'. Either include them or remove the dependency array 
+ react-hooks/exhaustive-deps
+  Line 237:17:  'width' is assigned to itself
+
+ no-self-assign
+  Line 238:18:  'height' is assigned to itself
+
+ no-self-assign
+
+src\components\FeatureButtons\FeatureButtons.tsx
+  Line 1:17:  'Component' is defined but never used  @typescript-eslint/no-unused-vars
+
+src\components\FeaturesInteractions\FeaturesInterations.tsx
+  Line 1:17:  'Component' is defined but never used  @typescript-eslint/no-unused-vars
+
+src\components\Rotate\Rotate.tsx
+  Line 1:17:   'Component' is defined but never used
+
+                                                       @typescript-eslint/no-unused-vars
+  Line 16:14:  'calculateAngleInRadian' is defined but never used
+
+                                                       @typescript-eslint/no-unused-vars
+  Line 30:25:  'angle' is assigned to itself
+
+                                                       no-self-assign
+  Line 78:13:  'width' is assigned a value but never used
+
+                                                       @typescript-eslint/no-unused-vars
+  Line 79:13:  'height' is assigned a value but never used
+
+                                                       @typescript-eslint/no-unused-vars
+  Line 94:13:  'imageData' is assigned a value but never used
+
+                                                       @typescript-eslint/no-unused-vars
+  Line 170:8:  React Hook React.useEffect has missing dependencies: 'props.canvasFunctions', 'props.isImageLoaded', and 'props.selectionInfo?.selectionEnabled'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 174:8:  React Hook React.useEffect has a missing dependency: 'props.canvasFunctions'. Either include it or remove the dependency array
+                                                       react-hooks/exhaustive-deps
+
+src\components\Select\Select.tsx
+  Line 1:10:    'Check' is defined but never used
+
+
+
+   @typescript-eslint/no-unused-vars
+  Line 2:17:    'Component' is defined but never used
+
+
+
+   @typescript-eslint/no-unused-vars
+  Line 7:10:    'showSelection' is defined but never used
+
+
+
+   @typescript-eslint/no-unused-vars
+  Line 199:13:  'startPosition' is assigned a value but never used
+
+
+
+   @typescript-eslint/no-unused-vars
+  Line 355:19:  Expected '!==' and instead saw '!='
+
+
+
+   eqeqeq
+  Line 355:31:  Expected '!==' and instead saw '!='
+
+
+
+   eqeqeq
+  Line 432:13:  'count' is assigned a value but never used
+
+
+
+   @typescript-eslint/no-unused-vars
+  Line 435:17:  'checkNearByPixels' is defined but never used
+
+
+
+   @typescript-eslint/no-unused-vars
+  Line 473:27:  Assignments to the 'editedImage' variable from inside React Hook React.useEffect will be lost after each render. To preserve the value over time, store it in a useRef Hook and keep the mutable value in the '.current' property. Otherwise, you can move this variable directly inside React.useEffect    
+   react-hooks/exhaustive-deps
+  Line 510:23:  Assignments to the 'editedImage' variable from inside React Hook React.useEffect will be lost after each render. To preserve the value over time, store it in a useRef Hook and keep the mutable value in the '.current' property. Otherwise, you can move this variable directly inside React.useEffect    
+   react-hooks/exhaustive-deps
+  Line 514:32:  Assignments to the 'selectionMapping' variable from inside React Hook React.useEffect will be lost after each render. To preserve the value over time, store it in a useRef Hook and keep the mutable value in the '.current' property. Otherwise, you can move this variable directly inside React.useEffect  react-hooks/exhaustive-deps
+  Line 548:14:  'generateFullResSelectionMapping' is defined but never used    
+
+
+
+r used
+       @typescript-eslint/no-unused-vars
+  Line 25:1:  Assign arrow function to a variable be  Line 1:10:  'setSelectionInfo' is defined but never usedr used                            @typescript-eslint/no-unused-vars                                     fore exporting as module def
+  Line 25:1:  Assign arrow function to a variable before exporting as module default  import/no-anonymous-default-export                                    ning.
+                                                    ne before.
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+Compiling...
+Files successfully emitted, waiting for typecheck results...
+Compiled with warnings.
+
+src\components\AdjustmentInteractions\AdjustmentInteractions.tsx
+  Line 26:11:  React Hook React.useEffect has missing dependencies: 'displayChanges' and 'props.isImageLoaded'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\CanvasAndImage\CanvasAndImage.jsx    
+  Line 6:8:     'NotInterestedIcon' is defined but never used            no-unused-vars
+  Line 302:85:  The function binding is unnecessary 
+                     no-extra-bind
+  Line 315:15:  'canvasRef' is assigned a value but 
+never used           no-unused-vars
+  Line 315:26:  'canvasContainerRef' is assigned a value but never used  no-unused-vars
+
+src\components\Crop\Crop.tsx
+  Line 1:17:    'Component' is defined but never used
+
+   @typescript-eslint/no-unused-vars
+  Line 31:12:   'supportSelection' is assigned a value but never used
+
+   @typescript-eslint/no-unused-vars
+  Line 31:30:   'setSupportSelection' is assigned a 
+value but never used
+
+   @typescript-eslint/no-unused-vars
+  Line 37:8:    React Hook React.useEffect has missing dependencies: 'cropEnabled' and 'needToEnableCrop'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 237:17:  'width' is assigned to itself       
+
+
+   no-self-assign
+  Line 238:18:  'height' is assigned to itself      
+
+
+   no-self-assign
+
+src\components\FeatureButtons\FeatureButtons.tsx    
+  Line 1:17:  'Component' is defined but never used 
+ @typescript-eslint/no-unused-vars
+
+src\components\FeaturesInteractions\FeaturesInterations.tsx
+  Line 1:17:  'Component' is defined but never used 
+ @typescript-eslint/no-unused-vars
+  Line 9:8:   'Select' is defined but never used    
+ @typescript-eslint/no-unused-vars
+
+src\components\Rotate\Rotate.tsx
+  Line 1:17:   'Component' is defined but never used
+
+
+     @typescript-eslint/no-unused-vars
+  Line 16:14:  'calculateAngleInRadian' is defined but never used
+
+
+     @typescript-eslint/no-unused-vars
+  Line 30:25:  'angle' is assigned to itself        
+
+
+
+     no-self-assign
+  Line 78:13:  'width' is assigned a value but never used
+
+
+     @typescript-eslint/no-unused-vars
+  Line 79:13:  'height' is assigned a value but never used
+
+
+     @typescript-eslint/no-unused-vars
+  Line 94:13:  'imageData' is assigned a value but never used
+
+
+     @typescript-eslint/no-unused-vars
+  Line 170:8:  React Hook React.useEffect has missing dependencies: 'props.canvasFunctions', 'props.isImageLoaded', and 'props.selectionInfo?.selectionEnabled'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 174:8:  React Hook React.useEffect has a missing dependency: 'props.canvasFunctions'. Either include it or remove the dependency array
+
+     react-hooks/exhaustive-deps
+
+src\components\Select\Select.tsx
+  Line 1:10:    'Check' is defined but never used   
+
+
+
+
+
+       @typescript-eslint/no-unused-vars
+  Line 2:17:    'Component' is defined but never used
+
+
+
+
+       @typescript-eslint/no-unused-vars
+  Line 7:10:    'showSelection' is defined but never used
+
+
+
+
+       @typescript-eslint/no-unused-vars
+  Line 199:13:  'startPosition' is assigned a value 
+but never used
+
+
+
+
+       @typescript-eslint/no-unused-vars
+  Line 355:19:  Expected '!==' and instead saw '!=' 
+
+
+
+
+
+       eqeqeq
+  Line 355:31:  Expected '!==' and instead saw '!=' 
+
+
+
+
+
+       eqeqeq
+  Line 432:13:  'count' is assigned a value but never used
+
+
+
+
+       @typescript-eslint/no-unused-vars
+  Line 435:17:  'checkNearByPixels' is defined but never used
+
+
+
+
+       @typescript-eslint/no-unused-vars
+  Line 473:27:  Assignments to the 'editedImage' variable from inside React Hook React.useEffect will be lost after each render. To preserve the value over 
+time, store it in a useRef Hook and keep the mutable value in the '.current' property. Otherwise, you can move this variable directly inside React.useEffect       react-hooks/exhaustive-deps
+  Line 510:23:  Assignments to the 'editedImage' variable from inside React Hook React.useEffect will be lost after each render. To preserve the value over 
+time, store it in a useRef Hook and keep the mutable value in the '.current' property. Otherwise, you can move this variable directly inside React.useEffect       react-hooks/exhaustive-deps
+  Line 514:32:  Assignments to the 'selectionMapping' variable from inside React Hook React.useEffect will be lost after each render. To preserve the value 
+over time, store it in a useRef Hook and keep the mutable value in the '.current' property. Otherwise, you can move this variable directly inside React.useEffect  react-hooks/exhaustive-deps
+  Line 548:14:  'generateFullResSelectionMapping' is defined but never used
+
+
+
+
+       @typescript-eslint/no-unused-vars
+
+src\redux\reducers\index.ts
+  Line 1:10:  'setSelectionInfo' is defined but nevefore exporting as module default  import/no-anonymou/no-unused-varss-default-export                                    fore exporting as module def
+
+Search for the keywords to learn more about each warning.                                               ning.
+To ignore, add // eslint-disable-next-line to the line before.ne before.
+
+^CTerminate batch job (Y/N)?
+rs: ~/Desktop/git/photo-editor (master)
+$ yarn run start > start.log 2>error.log
+
+rs: ~/Desktop/git/photo-editor (master)
+$ yarn run start 
+yarn run v1.22.4
+$ react-scripts start
+i ｢wds｣: Project is running at http://192.168.1.2/  
+i ｢wds｣: webpack output is served from
+i ｢wds｣: Content not from webpack is served from C:\Users\rs\Desktop\git\photo-editor\public
+i ｢wds｣: 404s will fallback to /
+Starting the development server...
+Compiled with warnings.
+
+src\components\AdjustmentInteractions\AdjustmentInteractions.tsx
+  Line 26:11:  React Hook React.useEffect has missing dependencies: 'displayChanges' and 'props.isImageLoaded'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\CanvasAndImage\CanvasAndImage.jsx
+  Line 6:8:     'NotInterestedIcon' is defined but never used            no-unused-vars
+  Line 302:85:  The function binding is unnecessary                      no-extra-bind
+  Line 315:15:  'canvasRef' is assigned a value but never used           no-unused-vars
+  Line 315:26:  'canvasContainerRef' is assigned a value but never used  no-unused-vars
+
+src\components\Crop\Crop.tsx
+  Line 1:17:    'Component' is defined but never used
+                                                   @typescript-eslint/no-unused-vars
+  Line 31:12:   'supportSelection' is assigned a value but never used
+                                                   @typescript-eslint/no-unused-vars
+  Line 31:30:   'setSupportSelection' is assigned a value but never used
+                                                   @typescript-eslint/no-unused-vars
+  Line 37:8:    React Hook React.useEffect has missing dependencies: 'cropEnabled' and 'needToEnableCrop'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 237:17:  'width' is assigned to itself
+                                                   no-self-assign
+  Line 238:18:  'height' is assigned to itself
+                                                   no-self-assign
+
+src\components\FeatureButtons\FeatureButtons.tsx
+  Line 1:17:  'Component' is defined but never used  @typescript-eslint/no-unused-vars
+
+src\components\FeaturesInteractions\FeaturesInterations.tsx
+  Line 1:17:  'Component' is defined but never used  @typescript-eslint/no-unused-vars
+  Line 9:8:   'Select' is defined but never used     @typescript-eslint/no-unused-vars
+
+src\components\Rotate\Rotate.tsx
+  Line 1:17:   'Component' is defined but never used
+                                                                                                         @typescript-eslint/no-unused-vars
+  Line 16:14:  'calculateAngleInRadian' is defined but never used
+                                                                                                         @typescript-eslint/no-unused-vars
+  Line 30:25:  'angle' is assigned to itself
+                                                                                                         no-self-assign
+  Line 78:13:  'width' is assigned a value but never used
+                                                                                                         @typescript-eslint/no-unused-vars
+  Line 79:13:  'height' is assigned a value but never used
+                                                                                                         @typescript-eslint/no-unused-vars
+  Line 94:13:  'imageData' is assigned a value but never used
+                                                                                                         @typescript-eslint/no-unused-vars
+  Line 170:8:  React Hook React.useEffect has missing dependencies: 'props.canvasFunctions', 'props.isImageLoaded', and 'props.selectionInfo?.selectionEnabled'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 174:8:  React Hook React.useEffect has a missing dependency: 'props.canvasFunctions'. Either include 
+it or remove the dependency array                                                                        react-hooks/exhaustive-deps
+  Line 1:10:  'setSelectionInfo' is defined but never used                            @typescript-eslint/no-unused-vars
+  Line 25:1:  Assign arrow function to a variable before exporting as module default  import/no-anonymous-default-export
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.

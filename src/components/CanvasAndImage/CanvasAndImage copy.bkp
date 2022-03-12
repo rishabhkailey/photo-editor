@@ -1,0 +1,321 @@
+import React, { Component } from 'react';
+import { connect } from "react-redux";
+import { setImageLoaded, setCanvasFunctions, setCanvasElements, setShowDisableSelectionTooltip, setSelectionInfo } from "../../redux/actions";
+
+import Tooltip from '@material-ui/core/Tooltip';
+import IconButton from '@material-ui/core/IconButton';
+import SelectAllIcon from '@material-ui/icons/SelectAll';
+import { RootState } from '../../redux/store';
+import { imageDataToImageSrc, imageElementToImageData } from '../../utils/imageConversion';
+import { WidthHeight } from '../../type';
+import CanvasHelper from '../../utils/CanvasHelper/canvasHelper'
+import ImageHelper from '../../utils/ImageHelper/imageHelper'
+
+// input image file -> image data url(by image reader) -> image (new Image(data url)) -> imageData (by image -> canvas -> imageData)
+// originalImage, displayImage, editedImage represent image data(array and width) not image html element
+
+interface props extends RootState {
+    setImageLoaded: any,
+    setSelectionInfo: any,
+    canvasRef: any,
+    canvasContainerRef: any,
+    setShowDisableSelectionTooltip: any,
+    setCanvasRef: any,
+    setCanvasFunctions: any,
+    setCanvasContainerRef: any
+}
+
+function CanvasAndImage(props: any) {
+    let canvasHelper: CanvasHelper;
+    let imageHelper: ImageHelper;
+    let canvasRef: any = React.useRef();
+    let canvasContainerRef: any = React.useRef();
+    let canvasAvailableSpaceRef: any = React.useRef();
+    let disableSelectionTooltipRef: any = React.useRef();
+    let ctx: any = null;
+
+    // just for backup original image file without any changes
+    let originalImage = null;
+
+    // image which is being currently displayed (under editing)
+    let displayImage: any = null;
+
+    // edited image, value = displayImage when display image or currently editing image is saved 
+    let editedImage: any = null;
+
+    // full res edited image, used by crop where res is decreased, so to maintain the quality it is used, and the last save image will reapply all the changes on the full res image then save (full res image)
+    let fullResEditedImage: any = null;
+
+    // image file which can be read by fileReader and can convert it into data url (image)(after that can be stored in originalImage, displayImage, editedImage)
+    let imageFile = null;
+
+    // html image element, try not to use this 
+    let imageElement = new Image();
+
+    let fullResEditedImageElement = new Image();
+
+    let editedImageElement = new Image();
+
+    // contains all funtions required by the features
+    let canvasFunctions: any = {};
+
+    // contains all elements(refs) which can be used e.g. canvasRef, canvasContainerRef
+    let canvasElements: any = {};
+
+    let fileReader: any = null;
+
+    let maxCanvasSize: WidthHeight = { width: 0, height: 0 };
+
+    const [isImageLoaded, setIsImageLoaded] = React.useState(false)
+
+    /*------------------------images-------------------------------*/
+    // returns new refernce of editedImage, so you can not do changes in editedImage use display image instead for intermediate changes
+
+    const getFullResEditedImage = () => {
+        if (!isImageLoaded)
+            return;
+
+        let image = fullResEditedImage;
+        return new ImageData(new Uint8ClampedArray(image.data), image.width);
+    }
+
+    // call this to save image (this should change 4 objects editedImage + fullResEditedImage and editedImageElement + fullResEditedImageElement )
+    function setFullResEditedImage(image: any) {
+        console.log("setFullResEditedImage called");
+
+        fullResEditedImage = new ImageData(new Uint8ClampedArray(image.data), image.width);
+        setFullResEditedImageElement(image);
+
+        // changes scaled edtedImage and editedImageElement
+        scaleImageAndSetEditedImage(image);
+    }
+
+    function getEditedImage() {
+        // console.debug(`get edited image called, isImageLoaded = ${isImageLoaded}`)
+
+        if (!isImageLoaded)
+            return;
+
+        let image = editedImage;
+        return new ImageData(new Uint8ClampedArray(image.data), image.width);
+    }
+
+    // set new reference because this image reference incoming can be of displayImage 
+    // try not to use this, use scaleImageAndSetEditedImage // if using this don't forget to call drawImage
+    function setEditedImage(image: any) {
+        editedImage = new ImageData(new Uint8ClampedArray(image.data), image.width);
+        setDisplayImage(image);
+        setEditedImageElement(editedImage);
+    }
+
+    function setEditedImageElement(image: any) {
+        editedImageElement.src = imageDataToImageSrc(image);
+    }
+
+    function setFullResEditedImageElement(image: any) {
+        fullResEditedImageElement.src = imageDataToImageSrc(image);
+    }
+
+    function getFullResEditedImageElement(): any {
+        return fullResEditedImageElement;
+    }
+
+    function getEditedImageElement() {
+        return editedImageElement;
+    }
+
+    function getDisplayImage() {
+        if (!isImageLoaded)
+            return;
+
+        return displayImage;
+    }
+
+    // requires new reference
+    function setDisplayImage(image: any) {
+        console.log(image);
+        displayImage = image;
+        canvasHelper.drawImageFromImageData(displayImage);
+    }
+
+    function resetDisplayImage() {
+        if (!isImageLoaded)
+            return;
+
+        console.log("reset image");
+        setDisplayImage(getEditedImage());
+    }
+
+    function scaleImageAndSetEditedImage(image: any) {
+
+        let { width, height } = canvasHelper.canvasElement.getBoundingClientRect();
+        if (Math.abs(Math.floor(width) - Math.floor(image.width)) > 10 || Math.abs(Math.floor(height) - Math.floor(image.height)) > 10) {
+            console.debug("in scaleImageAndSetEditedImage and scaling the image to canvas size ", { width: image.width, height: image.height }, "to", { width, height });
+            
+            console.debug(canvasAvailableSpaceRef.current, canvasHelper.canvasContainerElement);
+            // scale image is asynchronous so we cannot return imagedata from it so instead we are calling scaleImageAndSetEditedImage in it (it is not recurssion this fucntion will complete first)
+            canvasHelper.scaleCanvas({ width: image.width, height: image.height })
+            // scale the image so if image size is less then canvas size (scale the image) (canvas size is not effected by image, canvas ratio is effected by image)
+            scaleImageToCanvaSize(image);
+
+        }
+        else {
+            console.debug("in scaleImageAndSetEditedImage and calling setEditedImage and setDisplayImage");
+            setEditedImage(image);
+            setImageLoaded();
+        }
+
+    }
+
+    // initializeDisplayImage = ()=> {
+    //     if(!isImageLoaded)
+    //         return;
+
+    //     let image = editedImage;
+    //     displayImage =  new ImageData(new Uint8ClampedArray(image.data), image.width);
+    //     drawImage();
+    // }
+    /*------------------------images-------------------------------*/
+
+    /*-------------------SCALING-------------------------------------*/
+    const scaleImageToCanvaSize = (image: any) => {
+        // converting imagedata to image element
+        let canvas: any = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+
+        canvas.getContext("2d").putImageData(image, 0, 0);
+
+        let imageObject = new Image();
+        imageObject.src = canvas.toDataURL();
+
+        let imageData = null;
+
+        imageObject.onload = () => {
+            let resolution: WidthHeight = {
+                width: canvasHelper.canvasElement.width,
+                height: canvasHelper.canvasElement.height
+            }
+            console.debug(canvasHelper.canvasElement)
+            imageData = imageElementToImageData(imageObject, resolution);
+            console.debug(`scaled image to ${imageData.width}, ${imageData.height}`)
+            scaleImageAndSetEditedImage(imageData);
+        }
+    }
+    /*-------------------SCALING-------------------------------------*/
+
+    /*-------------------------CANVAS--------------------------*/
+    /*-------------------------CANVAS--------------------------*/
+
+
+    /*-------------------------IMAGE INPUT ----------------*/
+
+    // const fileReaderNewImageHandler = (e: any) => {
+    //     imageElement.src = e.target.result;
+    //     // now image.onload event will call displayInputImage
+    // }
+
+    // const displayInputImage = (e: any) => {
+    //     canvasHelper.scaleCanvas({ width: imageElement.width, height: imageElement.height })
+    //     let fullResImageData = imageElementToImageData(imageElement, undefined);
+    //     setFullResEditedImage(fullResImageData);
+    // }
+
+    // ??
+    const setImageLoaded = () => {
+        setIsImageLoaded(true)
+        // props.setGlobalState({ isImageLoaded: true });
+        props.setImageLoaded(true);
+    }
+
+    const imageInput = (e: any) => {
+        if (e.target.files && e.target.files.length === 0)
+            return;
+
+        imageHelper = new ImageHelper(e.target.files[0], canvasHelper)
+        console.debug(imageHelper)
+        imageFile = e.target.files[0];
+
+        // it will trigger fileReader.onload event and call fileReaderNewImageHandler 
+        // fileReader.readAsDataURL(e.target.files[0]);
+    }
+    React.useEffect(() => {
+        // Your code here
+        // fileReader = new FileReader();
+        // fileReader.onload = fileReaderNewImageHandler
+        // imageElement.onload = displayInputImage;
+        ctx = canvasRef.current.getContext('2d');
+        canvasFunctions = { resetDisplayImage: resetDisplayImage, getFullResEditedImageElement: getFullResEditedImageElement, getEditedImageElement: getEditedImageElement, getDisplayImage: getDisplayImage, setDisplayImage: setDisplayImage, scaleImageAndSetEditedImage: scaleImageAndSetEditedImage, getEditedImage: getEditedImage, saveEdits: null, getFullResEditedImage: getFullResEditedImage, setFullResEditedImage: setFullResEditedImage };
+        canvasElements = { canvas: canvasRef, canvasContainer: canvasContainerRef };
+
+        maxCanvasSize = canvasAvailableSpaceRef.current.getBoundingClientRect()
+        canvasHelper = new CanvasHelper(canvasRef.current, canvasContainerRef.current, maxCanvasSize)
+
+
+        // props.setGlobalState({ canvasFunctions: canvasFunctions, canvasElements: canvasElements })
+        // props.setCanvasElements(canvasElements);
+        props.setCanvasRef(canvasRef)
+        props.setCanvasContainerRef(canvasContainerRef)
+
+        props.setCanvasFunctions(canvasFunctions);
+
+        props.setShowDisableSelectionTooltip(false)
+
+        if (disableSelectionTooltipRef.current)
+            disableSelectionTooltipRef.current.focus();
+    }, []);
+
+    React.useEffect(() => {
+        console.log("here ................................................................................................");
+        console.log(props.showDisableSelectionTooltip);
+        if (props.showDisableSelectionTooltip === true) {
+            setTimeout((() => { props.setShowDisableSelectionTooltip(false) }), 2000);
+        }
+    }, [props.showDisableSelectionTooltip])
+    /*-------------------------IMAGE INPUT ----------------*/
+
+    const disableSelection = () => {
+        resetDisplayImage();
+        props.setSelectionInfo({ selectionEnabled: false, selectMapping: null })
+    }
+    let { selectionEnabled } = props.selectionInfo;
+    // let { canvasRef, canvasContainerRef } = props;
+    let selection = null;
+
+    if (selectionEnabled) {
+        selection = <div className="">
+            <Tooltip title="disable selection mode" open={props.showDisableSelectionTooltip}>
+                <div className="border rounded" >
+                    <IconButton aria-label="" color="secondary" size="small" onClick={disableSelection}>
+                        <SelectAllIcon color="secondary" />
+                    </IconButton>
+                </div>
+            </Tooltip>
+        </div>;
+    }
+    return <div className="d-flex flex-column align-items-stretch h-100">
+        <div className="d-flex flex-row justify-content-around">
+            <div className="d-flex flex-row flex-grow-1 justify-content-center">
+                <input className="border" type='file' accept="images" onChange={imageInput} />
+            </div>
+            {selection}
+        </div>
+        <div className="flex-grow-1 d-flex flex-row justify-content-center align-items-center" ref={canvasAvailableSpaceRef}>
+            <div style={{ height: "100%", width: "100%", position: "relative" }} ref={canvasContainerRef}>
+                <div className="flex-grow-1" style={{ position: "relative" }} >
+                    <canvas ref={canvasRef}></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+const mapStateToProps = (state: any) => ({
+    selectionInfo: state.selectionInfo,
+    showDisableSelectionTooltip: state.showDisableSelectionTooltip
+})
+
+
+export default connect(
+    mapStateToProps,
+    { setImageLoaded, setCanvasElements, setCanvasFunctions, setShowDisableSelectionTooltip, setSelectionInfo })(CanvasAndImage);

@@ -1,0 +1,2 @@
+useEffects
+better way of sharing canvas element and functions

@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './components/App/App.jsx'
+import App from './components/App/App.tsx'
 
-import store from "./redux/store.js";
-import {Provider} from "react-redux";
+import store from "./redux/store";
+import { Provider } from "react-redux";
 
 import * as serviceWorker from './serviceWorker';
 import 'bootstrap/dist/css/bootstrap.css';
@@ -12,7 +12,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 
 ReactDOM.render(
-  <React.StrictMode>
+  <React.StrictMode >
     <Provider store={store} >
       <App />
     </Provider>

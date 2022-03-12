@@ -1,12 +1,20 @@
-import React, { Component } from "react";
+import React from "react";
 import { connect } from "react-redux";
-class Rotate extends Component {
+import { RootState } from "../../redux/store";
+import { GlobalState } from "../../type";
+import { imageDataToImageSrc } from "../../utils/imageConversion";
 
-    state = {
-        value: 0
-    }
 
-    calculateAngleInRadian = (x1, y1, x2, y2) => {
+type props = Partial<RootState> & {
+    globalState: GlobalState
+}
+
+function Rotate(props: props) {
+
+    const [value, setValue] = React.useState(0)
+
+
+    function calculateAngleInRadian(x1: number, y1: number, x2: number, y2: number): number {
 
         // Math.pi will only give ans between 0 - 90 and -90 to 0 (math.abs() = 0 to 90)
 
@@ -38,23 +46,29 @@ class Rotate extends Component {
 
     }
 
-    inputHandler = (e) => {
-        this.setState({ value: e.target.value });
-        this.rotateImage(e.target.value);
+    function inputHandler(e: any): void {
+        setValue(Number(e.target.value))
+        rotateImage(Number(e.target.value));
     }
 
-    rotateImage = (value) => {
+    function rotateImage(value: number): void {
+        
+        if (!props.isImageLoaded || props.globalState.imageHelper === undefined) {
+            // TODO - display message to user
+            console.debug("either Image is not loaded or imageHelper is not intialized yet")
+            return;
+        }
 
-        let { canvasFunctions, isImageLoaded } = this.props;
+        let { canvasFunctions, isImageLoaded } = props;
 
         if (!isImageLoaded)
             return;
 
         // let { width, height, data } = image;
         console.log(value);
-        if (value === "0" || value === "360" || value === "-360") {
+        if (value === 0 || value === 360 || value === -360) {
             console.log("inside if");
-            let image = canvasFunctions.getEditedImage();
+            let image = props.globalState.imageHelper.editedImageData;
             canvasFunctions.setDisplayImage(image);
             return;
         }
@@ -63,13 +77,16 @@ class Rotate extends Component {
         // let rotatedImage = new ImageData(width, height);
         let angle_in_radian = (Math.PI / 180 * value);
 
-        let canvas = this.props.canvasElements.canvas.current;
+        let canvas = props.globalState.imageHelper.canvasHelper.canvasElement;
         let ctx = canvas.getContext("2d");
 
-        let imageElement = this.props.canvasFunctions.getEditedImageElement();
+        if (!ctx) {
+            // TODO - display message to user
+            console.debug("Unable to get canvas context")
+            return;
+        }
 
-        let width = imageElement.width;
-        let height = imageElement.height;
+        let imageElement = props.globalState.imageHelper.editedImageElement;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -92,33 +109,49 @@ class Rotate extends Component {
 
     }
 
-    applyChanges = () => {
-        this.props.canvasFunctions.setFullResEditedImage(this.getFullResRotatedImage(this.state.value));
+    function applyChanges(){
+        if (!props.isImageLoaded || props.globalState.imageHelper === undefined) {
+            // TODO - display message to user
+            console.debug("either Image is not loaded or imageHelper is not intialized yet")
+            return;
+        }
+        let imageData = getFullResRotatedImage(value)
+        if (imageData)
+            props.globalState.imageHelper.fullResImageData = imageData
     }
 
     // used for saving the changes
-    getFullResRotatedImage = (value) => {
+    function getFullResRotatedImage(value: number) {
+        
+        if (!props.isImageLoaded || props.globalState.imageHelper === undefined) {
+            // TODO - display message to user
+            console.debug("either Image is not loaded or imageHelper is not intialized yet")
+            return;
+        }
 
-        let { canvasFunctions, isImageLoaded } = this.props;
+        let { canvasFunctions, isImageLoaded } = props;
 
         if (!isImageLoaded)
             return;
 
-        let image = canvasFunctions.getFullResEditedImage();
+        let image = props.globalState.imageHelper.fullResEditedImageData;
 
-        if (value === "0" || value === "360" || value === "-360") {
+        if (value === 0 || value === 360 || value === -360) {
             return image;
         }
 
         let angle_in_radian = (Math.PI / 180 * value);
 
-        let imageElement = this.props.canvasFunctions.getFullResEditedImageElement();
-
+        let imageElement = props.globalState.imageHelper.fullResImageElement;
         let canvas = document.createElement("canvas");
         canvas.width = imageElement.width;
         canvas.height = imageElement.height;
         let ctx = canvas.getContext("2d");
-
+        if (!ctx) {
+            // TODO - display message to user
+            console.debug("Unable to get canvas context")
+            return;
+        }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         ctx.save(); //save the initial transformation (translation)
@@ -142,26 +175,46 @@ class Rotate extends Component {
 
     }
 
-    componentDidMount() {
-        if (this.props.isImageLoaded && this.props.selectionInfo.selectionEnabled) {
-            this.props.canvasFunctions.resetDisplayImage();
+    // componentDidMount() {
+    //     if (props.isImageLoaded && props.selectionInfo.selectionEnabled) {
+    //         props.canvasFunctions.resetDisplayImage();
+    //     }
+    // }
+
+    // componentDidUpdate() {
+
+    //     // if (props.isImageLoaded && props.selectionInfo.selectionEnabled) {
+    //     //     props.canvasFunctions.resetDisplayImage();
+    //     // }
+
+    // }
+
+    React.useEffect(()=>{
+        if (!props.isImageLoaded || props.globalState.imageHelper === undefined) {
+            // TODO - display message to user
+            console.debug("either Image is not loaded or imageHelper is not intialized yet")
+            return;
         }
-    }
 
-    componentDidUpdate() {
+        if (props.selectionInfo?.selectionEnabled) {
+            props.globalState.imageHelper.resetDisplayImage();
+        }
+    }, [])
 
-        // if (this.props.isImageLoaded && this.props.selectionInfo.selectionEnabled) {
-        //     this.props.canvasFunctions.resetDisplayImage();
-        // }
+    React.useEffect(()=>{
+        return () => {
+            if (!props.isImageLoaded || props.globalState.imageHelper === undefined) {
+                // TODO - display message to user
+                console.debug("either Image is not loaded or imageHelper is not intialized yet")
+                return;
+            }
+            props.globalState.imageHelper.resetDisplayImage();
+        };
+    }, [])
 
-    }
-
-    componentWillUnmount() {
-        this.props.canvasFunctions.resetDisplayImage();
-    }
-
-    render() {
-        let { isImageLoaded, selectionInfo } = this.props;
+    
+        console.log(props.globalState)
+        let { isImageLoaded, selectionInfo } = props;
         console.log(isImageLoaded)
         return <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
 
@@ -169,21 +222,20 @@ class Rotate extends Component {
                 Select image First to start editing
             </div>}
 
-            {selectionInfo.selectionEnabled && <div className="alert alert-danger">
+            {selectionInfo?.selectionEnabled && <div className="alert alert-danger">
                 this feature does not support editing with selection
             </div>}
 
             <div>Rotate</div>
             <hr />
-            <input style={{ width: "100%" }} type="range" defaultValue="0" min="-360" max="360" step="1" onChange={this.inputHandler} />
+            <input style={{ width: "100%" }} type="range" defaultValue="0" min="-360" max="360" step="1" onChange={inputHandler} />
             <hr />
-            <button onClick={this.applyChanges} className="btn btn-primary">Apply</button>
+            <button onClick={applyChanges} className="btn btn-primary">Apply</button>
         </div>
-    }
 }
 
 
-const mapStateToProps = state => {
+const mapStateToProps = (state: RootState) => {
     console.log(state);
     return { ...state };
 }

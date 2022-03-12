@@ -1,17 +1,17 @@
 [{
-        "name": "adjustments",
-        "supportSelectionMapping": true
-    },
-    {
-        "name": "crop",
-        "supportSelectionMapping": false
-    },
-    {
-        "name": "rotate",
-        "supportSelectionMapping": false
-    },
-    {
-        "name": "select",
-        "supportSelectionMapping": true
-    }
+    "name": "adjustments",
+    "supportSelectionMapping": true
+  },
+  {
+    "name": "crop",
+    "supportSelectionMapping": false
+  },
+  {
+    "name": "rotate",
+    "supportSelectionMapping": false
+  },
+  {
+    "name": "select",
+    "supportSelectionMapping": true
+  }
 ]
